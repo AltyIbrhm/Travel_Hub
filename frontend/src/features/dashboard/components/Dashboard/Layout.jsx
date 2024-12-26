@@ -1,22 +1,37 @@
-import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { Container, Row, Col, Form, Button, Card, Dropdown, Image } from 'react-bootstrap';
+import React, { useState, useEffect, useRef } from 'react';
+import { Container, Row, Col, Card, Form, Button } from 'react-bootstrap';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import Profile from './components/Profile/Layout';
 import Sidebar from '../Sidebar';
+import L from 'leaflet';
 import 'react-toastify/dist/ReactToastify.css';
 import 'leaflet/dist/leaflet.css';
 import 'leaflet-routing-machine/dist/leaflet-routing-machine.css';
 import 'bootstrap-icons/font/bootstrap-icons.css';
 import './styles.css';
 
+// Fix Leaflet's default icon path issues
+delete L.Icon.Default.prototype._getIconUrl;
+L.Icon.Default.mergeOptions({
+  iconRetinaUrl: require('leaflet/dist/images/marker-icon-2x.png'),
+  iconUrl: require('leaflet/dist/images/marker-icon.png'),
+  shadowUrl: require('leaflet/dist/images/marker-shadow.png'),
+});
+
 const Dashboard = () => {
   const navigate = useNavigate();
-  const user = JSON.parse(localStorage.getItem('user')); // Get user directly from localStorage
+  const user = JSON.parse(localStorage.getItem('user'));
   const mapRef = useRef(null);
   const [mapInstance, setMapInstance] = useState(null);
   const [showProfile, setShowProfile] = useState(false);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const [bookingData, setBookingData] = useState({
+    pickupLocation: '',
+    destination: '',
+    vehicleType: 'sedan',
+    luggage: '0'
+  });
   const [notifications, setNotifications] = useState([
     {
       id: 1,
@@ -34,24 +49,63 @@ const Dashboard = () => {
     }
   ]);
 
-  // Initialize map
-  useEffect(() => {
-    // Import Leaflet dynamically
-    const initMap = async () => {
-      if (!mapRef.current) return;
-      
-      try {
-        // Clean up existing map instance
-        if (mapInstance) {
-          mapInstance.remove();
-          setMapInstance(null);
-        }
+  const stats = [
+    {
+      title: 'Total Rides',
+      value: '24',
+      icon: 'bi-car-front',
+      change: '+12%',
+      positive: true
+    },
+    {
+      title: 'Distance',
+      value: '436 km',
+      icon: 'bi-map',
+      change: '+8%',
+      positive: true
+    },
+    {
+      title: 'Saved',
+      value: '$128',
+      icon: 'bi-piggy-bank',
+      change: '+15%',
+      positive: true
+    },
+    {
+      title: 'CO₂ Reduced',
+      value: '86 kg',
+      icon: 'bi-tree',
+      change: '+18%',
+      positive: true
+    }
+  ];
 
-        // Import Leaflet dynamically
-        const L = await import('leaflet');
-        
-        // Create map instance
-        const map = L.map(mapRef.current, {
+  const recentBookings = [
+    {
+      id: 1,
+      destination: 'Airport',
+      date: '2024-01-20',
+      status: 'Upcoming',
+      amount: '$45'
+    },
+    {
+      id: 2,
+      destination: 'Shopping Mall',
+      date: '2024-01-18',
+      status: 'Completed',
+      amount: '$25'
+    }
+  ];
+
+  useEffect(() => {
+    let map = null;
+    
+    const initMap = () => {
+      if (!mapRef.current || map) return;
+
+      try {
+        // Initialize the map
+        map = L.map(mapRef.current, {
           center: [51.505, -0.09],
           zoom: 13,
           zoomControl: true
@@ -62,18 +116,55 @@ const Dashboard = () => {
           attribution: '© OpenStreetMap contributors'
         }).addTo(map);
 
-        // Add markers for example
+        // Add example markers
         const marker = L.marker([51.505, -0.09]).addTo(map);
-        marker.bindPopup("<b>Hello!</b><br>I am a popup.").openPopup();
+        marker.bindPopup("<b>Available Vehicle</b><br>Sedan - 5 mins away").openPopup();
+
+        // Add click handler for location selection
+        map.on('click', (e) => {
+          const { lat, lng } = e.latlng;
+          // Update the form with clicked coordinates
+          const locationString = `${lat.toFixed(6)}, ${lng.toFixed(6)}`;
+          
+          // If pickup is empty, fill pickup, otherwise fill destination
+          if (!bookingData.pickupLocation) {
+            setBookingData(prev => ({
+              ...prev,
+              pickupLocation: locationString
+            }));
+            // Add marker for pickup
+            L.marker([lat, lng], {
+              icon: L.divIcon({
+                className: 'pickup-marker',
+                html: '<i class="bi bi-geo-alt text-primary"></i>',
+                iconSize: [25, 25]
+              })
+            }).addTo(map).bindPopup('Pickup Location');
+          } else if (!bookingData.destination) {
+            setBookingData(prev => ({
+              ...prev,
+              destination: locationString
+            }));
+            // Add marker for destination
+            L.marker([lat, lng], {
+              icon: L.divIcon({
+                className: 'destination-marker',
+                html: '<i class="bi bi-geo-alt-fill text-danger"></i>',
+                iconSize: [25, 25]
+              })
+            }).addTo(map).bindPopup('Destination');
+          }
+        });
 
         setMapInstance(map);
 
-        // Force a map resize after a short delay
+        // Force a map resize
         setTimeout(() => {
           map.invalidateSize();
         }, 100);
       } catch (error) {
         console.error('Error initializing map:', error);
+        toast.error('Failed to load map');
       }
     };
 
@@ -81,313 +172,223 @@ const Dashboard = () => {
 
     // Cleanup function
     return () => {
-      if (mapInstance) {
-        mapInstance.remove();
-        setMapInstance(null);
+      if (map) {
+        map.remove();
       }
     };
-  }, []); // Empty dependency array to run only once on mount
+  }, [mapRef.current]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  const markNotificationAsRead = (notificationId) => {
-    setNotifications(notifications.map(notification => 
-      notification.id === notificationId 
-        ? { ...notification, unread: false }
-        : notification
-    ));
+  const handleBookingChange = (e) => {
+    const { name, value } = e.target;
+    setBookingData(prev => ({
+      ...prev,
+      [name]: value
+    }));
   };
 
-  const unreadCount = notifications.filter(n => n.unread).length;
+  const handleBookingSubmit = (e) => {
+    e.preventDefault();
+    // Add your booking submission logic here
+    console.log('Booking data:', bookingData);
+    toast.success('Booking request submitted!');
+  };
 
   const handleSidebarToggle = () => {
-    console.log('Before toggle - Current state:', sidebarCollapsed);
-    setSidebarCollapsed(prevState => {
-      const newState = !prevState;
-      console.log('After toggle - New state:', newState);
-      return newState;
-    });
+    setSidebarCollapsed(!sidebarCollapsed);
   };
-
-  // Debug state changes
-  useEffect(() => {
-    console.log('Sidebar collapsed state updated to:', sidebarCollapsed);
-  }, [sidebarCollapsed]);
 
   return (
     <div className="dashboard-wrapper">
-      <Sidebar 
-        isCollapsed={sidebarCollapsed}
-        onToggle={handleSidebarToggle}
-      />
-      <div 
-        className={`dashboard-content ${sidebarCollapsed ? 'sidebar-collapsed' : ''}`}
-        style={{ transition: 'margin-left 0.3s ease-in-out' }}
-      >
-        <div className="dashboard-container">
-          <Container fluid>
-            {/* Header with Profile and Notifications */}
-            <Row className="header-row mb-4">
-              <Col className="d-flex justify-content-between align-items-center">
-                <h1 className="dashboard-title">Welcome back, {user?.firstName || 'User'}!</h1>
-                <div className="d-flex align-items-center">
-                  <Dropdown className="me-3">
-                    <Dropdown.Toggle variant="light" id="notification-dropdown" className="notification-toggle">
-                      <i className="bi bi-bell"></i>
-                      {notifications.filter(n => n.unread).length > 0 && (
-                        <span className="notification-badge">{notifications.filter(n => n.unread).length}</span>
-                      )}
-                    </Dropdown.Toggle>
-                    <Dropdown.Menu className="notification-menu">
-                      <div className="notification-header">
-                        <h6 className="mb-0">Notifications</h6>
-                        {notifications.filter(n => n.unread).length > 0 && (
-                          <small>{notifications.filter(n => n.unread).length} unread</small>
-                        )}
-                      </div>
-                      {notifications.map(notification => (
-                        <Dropdown.Item 
-                          key={notification.id}
-                          className={`notification-item ${notification.unread ? 'unread' : ''}`}
-                          onClick={() => markNotificationAsRead(notification.id)}
-                        >
-                          <div className="notification-content">
-                            <h6 className="notification-title">{notification.title}</h6>
-                            <p className="notification-message">{notification.message}</p>
-                            <small className="notification-time">{notification.time}</small>
-                          </div>
-                        </Dropdown.Item>
-                      ))}
-                    </Dropdown.Menu>
-                  </Dropdown>
-                  <Button 
-                    variant="outline-primary"
-                    className="profile-button"
-                    onClick={() => setShowProfile(!showProfile)}
-                  >
-                    <Image
-                      src={user?.profilePicture || 'https://via.placeholder.com/40'}
-                      roundedCircle
-                      className="profile-button-image"
-                      alt="Profile"
-                    />
-                    <span className="ms-2">{user?.firstName || 'User'}</span>
-                  </Button>
-                </div>
-              </Col>
-            </Row>
+      <Sidebar isCollapsed={sidebarCollapsed} onToggle={handleSidebarToggle} />
+      
+      <main className={`dashboard-content ${sidebarCollapsed ? 'sidebar-collapsed' : ''}`}>
+        <Container fluid>
+          {/* Header Section */}
+          <Row className="header-row align-items-center mb-4">
+            <Col>
+              <h1 className="dashboard-title">Welcome back, {user?.firstName}!</h1>
+            </Col>
+          </Row>
 
-            {/* Profile Modal */}
-            {showProfile && (
-              <Row className="mb-4">
-                <Col>
-                  <Profile onClose={() => setShowProfile(false)} />
-                </Col>
-              </Row>
-            )}
-
-            {/* Stats Row */}
-            <Row className="mb-4">
-              <Col md={3}>
-                <Card className="stats-card">
+          {/* Stats Section */}
+          <Row className="mb-4">
+            {stats.map((stat, index) => (
+              <Col key={index} xs={12} sm={6} lg={3} className="mb-3">
+                <Card className="stats-card h-100">
                   <Card.Body>
-                    <div className="icon-wrapper bg-primary">
-                      <i className="bi bi-car-front"></i>
-                    </div>
-                    <h6 className="stats-title">Total Rides</h6>
-                    <h3 className="stats-value">24</h3>
-                    <div className="stats-change positive">
-                      <i className="bi bi-arrow-up"></i>
-                      <span>12% from last month</span>
-                    </div>
-                  </Card.Body>
-                </Card>
-              </Col>
-              <Col md={3}>
-                <Card className="stats-card">
-                  <Card.Body>
-                    <div className="icon-wrapper bg-success">
-                      <i className="bi bi-cash"></i>
-                    </div>
-                    <h6 className="stats-title">Total Spent</h6>
-                    <h3 className="stats-value">$1,248</h3>
-                    <div className="stats-change positive">
-                      <i className="bi bi-arrow-up"></i>
-                      <span>8% from last month</span>
-                    </div>
-                  </Card.Body>
-                </Card>
-              </Col>
-              <Col md={3}>
-                <Card className="stats-card">
-                  <Card.Body>
-                    <div className="icon-wrapper bg-info">
-                      <i className="bi bi-star"></i>
-                    </div>
-                    <h6 className="stats-title">Average Rating</h6>
-                    <h3 className="stats-value">4.8</h3>
-                    <div className="stats-change positive">
-                      <i className="bi bi-arrow-up"></i>
-                      <span>0.2 from last month</span>
-                    </div>
-                  </Card.Body>
-                </Card>
-              </Col>
-              <Col md={3}>
-                <Card className="stats-card">
-                  <Card.Body>
-                    <div className="icon-wrapper bg-warning">
-                      <i className="bi bi-clock-history"></i>
-                    </div>
-                    <h6 className="stats-title">Upcoming Rides</h6>
-                    <h3 className="stats-value">3</h3>
-                    <div className="stats-change negative">
-                      <i className="bi bi-arrow-down"></i>
-                      <span>2 less than last month</span>
-                    </div>
-                  </Card.Body>
-                </Card>
-              </Col>
-            </Row>
-
-            {/* Booking Section */}
-            <Row>
-              <Col md={8}>
-                <Card className="mb-4">
-                  <Card.Header>
-                    <h5 className="mb-0">Book Your Ride</h5>
-                  </Card.Header>
-                  <Card.Body>
-                    <div className="map-container">
-                      <div className="map-helper-text">
-                        <i className="bi bi-info-circle"></i>
-                        Click on map to set pickup and destination locations
+                    <div className="d-flex align-items-center">
+                      <div className="icon-wrapper">
+                        <i className={`bi ${stat.icon}`}></i>
                       </div>
-                      <div ref={mapRef} id="map" style={{ height: '400px', width: '100%' }}></div>
+                      <div className="ms-3">
+                        <h6 className="stats-title">{stat.title}</h6>
+                        <h3 className="stats-value">{stat.value}</h3>
+                        <span className={`stats-change ${stat.positive ? 'positive' : 'negative'}`}>
+                          <i className={`bi bi-arrow-${stat.positive ? 'up' : 'down'}`}></i>
+                          {stat.change}
+                        </span>
+                      </div>
                     </div>
-                    <Form className="mt-4">
-                      <Row>
-                        <Col md={6}>
-                          <Form.Group className="mb-3">
-                            <Form.Label>
-                              <i className="bi bi-geo-alt"></i>
-                              Pickup Location
-                            </Form.Label>
-                            <Form.Control
-                              type="text"
-                              placeholder="Enter pickup location"
-                              name="pickupLocation"
-                            />
-                          </Form.Group>
-                        </Col>
-                        <Col md={6}>
-                          <Form.Group className="mb-3">
-                            <Form.Label>
-                              <i className="bi bi-geo-alt-fill"></i>
-                              Destination
-                            </Form.Label>
-                            <Form.Control
-                              type="text"
-                              placeholder="Enter destination"
-                              name="destination"
-                            />
-                          </Form.Group>
-                        </Col>
-                      </Row>
-                      <Row>
-                        <Col md={6}>
-                          <Form.Group className="mb-3">
-                            <Form.Label>
-                              <i className="bi bi-car-front"></i>
-                              Vehicle Type
-                            </Form.Label>
-                            <Form.Select name="vehicleType">
-                              <option value="sedan">Sedan</option>
-                              <option value="suv">SUV</option>
-                              <option value="van">Van</option>
-                            </Form.Select>
-                          </Form.Group>
-                        </Col>
-                        <Col md={6}>
-                          <Form.Group className="mb-3">
-                            <Form.Label>
-                              <i className="bi bi-briefcase"></i>
-                              Number of Luggage
-                            </Form.Label>
-                            <Form.Select name="luggage">
-                              <option value="0">No luggage</option>
-                              <option value="1">1 piece</option>
-                              <option value="2">2 pieces</option>
-                              <option value="3">3 pieces</option>
-                              <option value="4">4+ pieces</option>
-                            </Form.Select>
-                          </Form.Group>
-                        </Col>
-                      </Row>
-                      <Button variant="primary" className="w-100">
-                        Book Now
-                      </Button>
-                    </Form>
                   </Card.Body>
                 </Card>
               </Col>
-              <Col md={4}>
-                <Card className="cost-breakdown-card mb-4">
-                  <Card.Header>
-                    <h5 className="mb-0">Cost Breakdown</h5>
-                  </Card.Header>
-                  <Card.Body>
-                    <div className="cost-breakdown-item">
-                      <span>Base Fare</span>
-                      <span>$25.00</span>
-                    </div>
-                    <div className="cost-breakdown-item">
-                      <span>Distance (2.5 miles)</span>
-                      <span>$6.25</span>
-                    </div>
-                    <div className="cost-breakdown-item">
-                      <span>Airport Fee</span>
-                      <span>$15.00</span>
-                    </div>
-                    <div className="cost-breakdown-item">
-                      <span>Luggage (2 pieces)</span>
-                      <span>$20.00</span>
-                    </div>
-                    <hr />
-                    <div className="cost-breakdown-item">
-                      <strong>Total</strong>
-                      <strong>$66.25</strong>
-                    </div>
-                  </Card.Body>
-                </Card>
+            ))}
+          </Row>
 
-                <Card>
-                  <Card.Header>
-                    <h5 className="mb-0">Recent Bookings</h5>
-                  </Card.Header>
-                  <Card.Body>
-                    <div className="recent-booking-item">
-                      <div className="d-flex justify-content-between align-items-center mb-2">
-                        <span className="badge bg-success">Completed</span>
-                        <small className="text-muted">2 days ago</small>
-                      </div>
-                      <p className="mb-1">Airport → Downtown Hotel</p>
-                      <small className="text-muted">$45.00 • Sedan • 2 luggage</small>
+          {/* Map and Booking Section */}
+          <Row className="mb-4">
+            <Col lg={8} className="mb-3">
+              <Card className="h-100">
+                <Card.Body>
+                  <h5 className="card-title mb-3">Book Your Ride</h5>
+                  <div className="map-container" ref={mapRef}>
+                    <div className="map-helper-text">
+                      <i className="bi bi-info-circle me-2"></i>
+                      Click on map to set pickup and destination locations
                     </div>
-                    <hr />
-                    <div className="recent-booking-item">
-                      <div className="d-flex justify-content-between align-items-center mb-2">
-                        <span className="badge bg-warning">Upcoming</span>
-                        <small className="text-muted">Tomorrow</small>
+                  </div>
+                  <Form className="mt-4" onSubmit={handleBookingSubmit}>
+                    <Row>
+                      <Col md={6}>
+                        <Form.Group className="mb-3">
+                          <Form.Label>
+                            <i className="bi bi-geo-alt me-2"></i>
+                            Pickup Location
+                          </Form.Label>
+                          <Form.Control
+                            type="text"
+                            placeholder="Enter pickup location"
+                            name="pickupLocation"
+                            value={bookingData.pickupLocation}
+                            onChange={handleBookingChange}
+                          />
+                        </Form.Group>
+                      </Col>
+                      <Col md={6}>
+                        <Form.Group className="mb-3">
+                          <Form.Label>
+                            <i className="bi bi-geo-alt-fill me-2"></i>
+                            Destination
+                          </Form.Label>
+                          <Form.Control
+                            type="text"
+                            placeholder="Enter destination"
+                            name="destination"
+                            value={bookingData.destination}
+                            onChange={handleBookingChange}
+                          />
+                        </Form.Group>
+                      </Col>
+                    </Row>
+                    <Row>
+                      <Col md={6}>
+                        <Form.Group className="mb-3">
+                          <Form.Label>
+                            <i className="bi bi-car-front me-2"></i>
+                            Vehicle Type
+                          </Form.Label>
+                          <Form.Select 
+                            name="vehicleType"
+                            value={bookingData.vehicleType}
+                            onChange={handleBookingChange}
+                          >
+                            <option value="sedan">Sedan</option>
+                            <option value="suv">SUV</option>
+                            <option value="van">Van</option>
+                            <option value="luxury">Luxury</option>
+                          </Form.Select>
+                        </Form.Group>
+                      </Col>
+                      <Col md={6}>
+                        <Form.Group className="mb-3">
+                          <Form.Label>
+                            <i className="bi bi-briefcase me-2"></i>
+                            Number of Luggage
+                          </Form.Label>
+                          <Form.Select
+                            name="luggage"
+                            value={bookingData.luggage}
+                            onChange={handleBookingChange}
+                          >
+                            <option value="0">No luggage</option>
+                            <option value="1">1 piece</option>
+                            <option value="2">2 pieces</option>
+                            <option value="3">3 pieces</option>
+                            <option value="4">4+ pieces</option>
+                          </Form.Select>
+                        </Form.Group>
+                      </Col>
+                    </Row>
+                    <Button variant="primary" type="submit" className="w-100">
+                      Book Now
+                    </Button>
+                  </Form>
+                </Card.Body>
+              </Card>
+            </Col>
+            <Col lg={4}>
+              <Card className="cost-breakdown-card mb-4">
+                <Card.Header>
+                  <h5 className="mb-0">Cost Breakdown</h5>
+                </Card.Header>
+                <Card.Body>
+                  <div className="cost-breakdown-item">
+                    <span>Base Fare</span>
+                    <span>$25.00</span>
+                  </div>
+                  <div className="cost-breakdown-item">
+                    <span>Distance (2.5 miles)</span>
+                    <span>$6.25</span>
+                  </div>
+                  <div className="cost-breakdown-item">
+                    <span>Service Fee</span>
+                    <span>$2.00</span>
+                  </div>
+                  <div className="cost-breakdown-item">
+                    <span>Luggage ({bookingData.luggage} pieces)</span>
+                    <span>${Number(bookingData.luggage) * 5}.00</span>
+                  </div>
+                  <hr />
+                  <div className="cost-breakdown-item total">
+                    <strong>Total Estimated Cost</strong>
+                    <strong>${33.25 + (Number(bookingData.luggage) * 5)}</strong>
+                  </div>
+                </Card.Body>
+              </Card>
+
+              {/* Recent Bookings Card */}
+              <Card className="h-100">
+                <Card.Header>
+                  <h5 className="mb-0">Recent Bookings</h5>
+                </Card.Header>
+                <Card.Body>
+                  {recentBookings.map((booking) => (
+                    <div key={booking.id} className="recent-booking-item">
+                      <div className="d-flex justify-content-between align-items-center">
+                        <div>
+                          <h6 className="mb-1">{booking.destination}</h6>
+                          <small className="text-muted">{booking.date}</small>
+                        </div>
+                        <div className="text-end">
+                          <span className={`badge ${booking.status === 'Upcoming' ? 'bg-primary' : 'bg-success'}`}>
+                            {booking.status}
+                          </span>
+                          <div className="mt-1">{booking.amount}</div>
+                        </div>
                       </div>
-                      <p className="mb-1">Hotel → Shopping Mall</p>
-                      <small className="text-muted">$35.00 • SUV • No luggage</small>
                     </div>
-                  </Card.Body>
-                </Card>
-              </Col>
-            </Row>
-          </Container>
-        </div>
-      </div>
+                  ))}
+                </Card.Body>
+              </Card>
+            </Col>
+          </Row>
+
+          {/* Profile Modal */}
+          {showProfile && (
+            <Profile onClose={() => setShowProfile(false)} />
+          )}
+        </Container>
+      </main>
     </div>
   );
 };

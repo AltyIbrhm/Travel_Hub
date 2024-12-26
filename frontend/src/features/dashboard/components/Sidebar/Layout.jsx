@@ -10,11 +10,36 @@ const Sidebar = ({ isCollapsed = false, onToggle }) => {
   const handleClick = (e) => {
     e.preventDefault();
     e.stopPropagation();
-    console.log('Sidebar: handleClick called');
     if (typeof onToggle === 'function') {
       onToggle();
     }
   };
+
+  const navigationItems = [
+    {
+      section: 'Main',
+      items: [
+        { path: '/dashboard', icon: 'bi-speedometer2', label: 'Dashboard' },
+        { path: '/rides', icon: 'bi-car-front', label: 'My Rides' },
+        { path: '/bookings', icon: 'bi-calendar-check', label: 'Bookings' }
+      ]
+    },
+    {
+      section: 'Account',
+      items: [
+        { path: '/profile', icon: 'bi-person', label: 'Profile' },
+        { path: '/settings', icon: 'bi-gear', label: 'Settings' },
+        { path: '/wallet', icon: 'bi-wallet2', label: 'Wallet' }
+      ]
+    },
+    {
+      section: 'Support',
+      items: [
+        { path: '/help', icon: 'bi-question-circle', label: 'Help Center' },
+        { path: '/contact', icon: 'bi-chat-dots', label: 'Contact Us' }
+      ]
+    }
+  ];
 
   return (
     <div className={`sidebar ${isCollapsed ? 'collapsed' : ''}`}>
@@ -51,67 +76,36 @@ const Sidebar = ({ isCollapsed = false, onToggle }) => {
         )}
       </div>
 
-      {/* Navigation Menu */}
+      {/* Navigation Sections */}
       <Nav className="sidebar-nav">
-        {/* Main Section */}
-        <div className="nav-section">
-          {!isCollapsed && <div className="nav-section-title">MAIN</div>}
-          <Nav.Item>
-            <NavLink to="/dashboard" className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`} title="Dashboard">
-              <i className="bi bi-speedometer2"></i>
-              {!isCollapsed && <span>Dashboard</span>}
-            </NavLink>
-          </Nav.Item>
-          <Nav.Item>
-            <NavLink to="/reservations" className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`} title="My Reservations">
-              <i className="bi bi-calendar-check"></i>
-              {!isCollapsed && <span>My Reservations</span>}
-            </NavLink>
-          </Nav.Item>
-          <Nav.Item>
-            <NavLink to="/rides" className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`} title="My Rides">
-              <i className="bi bi-car-front"></i>
-              {!isCollapsed && <span>My Rides</span>}
-            </NavLink>
-          </Nav.Item>
-        </div>
-
-        {/* Account Section */}
-        <div className="nav-section">
-          {!isCollapsed && <div className="nav-section-title">ACCOUNT</div>}
-          <Nav.Item>
-            <NavLink to="/payments" className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`} title="Payments">
-              <i className="bi bi-credit-card"></i>
-              {!isCollapsed && <span>Payments</span>}
-            </NavLink>
-          </Nav.Item>
-          <Nav.Item>
-            <NavLink to="/notifications" className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`} title="Notifications">
-              <i className="bi bi-bell"></i>
-              {!isCollapsed && <span>Notifications</span>}
-              <span className="notification-badge">2</span>
-            </NavLink>
-          </Nav.Item>
-          <Nav.Item>
-            <NavLink to="/profile" className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`} title="Profile">
-              <i className="bi bi-person"></i>
-              {!isCollapsed && <span>Profile</span>}
-            </NavLink>
-          </Nav.Item>
-          <Nav.Item>
-            <NavLink to="/settings" className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`} title="Settings">
-              <i className="bi bi-gear"></i>
-              {!isCollapsed && <span>Settings</span>}
-            </NavLink>
-          </Nav.Item>
-        </div>
+        {navigationItems.map((section, index) => (
+          <div key={index} className="nav-section">
+            {!isCollapsed && (
+              <div className="nav-section-title">{section.section}</div>
+            )}
+            {section.items.map((item, itemIndex) => (
+              <NavLink
+                key={itemIndex}
+                to={item.path}
+                className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}
+                title={isCollapsed ? item.label : undefined}
+              >
+                <i className={`bi ${item.icon}`}></i>
+                {!isCollapsed && <span>{item.label}</span>}
+                {item.path === '/rides' && !isCollapsed && (
+                  <span className="notification-badge">2</span>
+                )}
+              </NavLink>
+            ))}
+          </div>
+        ))}
       </Nav>
 
-      {/* Help Center Link */}
+      {/* Sidebar Footer */}
       <div className="sidebar-footer">
-        <NavLink to="/help" className="help-link" title="Help Center">
-          <i className="bi bi-question-circle"></i>
-          {!isCollapsed && <span>Help Center</span>}
+        <NavLink to="/logout" className="help-link">
+          <i className="bi bi-box-arrow-right"></i>
+          {!isCollapsed && <span>Logout</span>}
         </NavLink>
       </div>
     </div>
