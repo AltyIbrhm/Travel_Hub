@@ -1,5 +1,5 @@
 import React from 'react';
-import SidebarLayout from './Layout';
+import SidebarLayout from './SidebarLayout';
 
 const Sidebar = () => {
   return <SidebarLayout />;

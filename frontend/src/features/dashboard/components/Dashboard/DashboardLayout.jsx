@@ -2,14 +2,14 @@ import React, { useState, useEffect, useRef } from 'react';
 import { Container, Row, Col, Card, Form, Button } from 'react-bootstrap';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
-import Sidebar from '../Sidebar';
+import Sidebar from '../Sidebar/Sidebar';
 import { SidebarProvider, useSidebar } from '../../context/SidebarContext';
 import L from 'leaflet';
 import 'react-toastify/dist/ReactToastify.css';
 import 'leaflet/dist/leaflet.css';
 import 'leaflet-routing-machine/dist/leaflet-routing-machine.css';
 import 'bootstrap-icons/font/bootstrap-icons.css';
-import './styles.css';
+import './dashboard.styles.css';
 import authService from '../../../../features/auth/services/authService';
 
 // Fix Leaflet's default icon path issues

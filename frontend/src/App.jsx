@@ -11,7 +11,8 @@ import ForgotPassword from './features/auth/components/ForgotPassword';
 import ResetPassword from './features/auth/components/ResetPassword';
 
 // Dashboard Component
-import Dashboard from './features/dashboard/components/Dashboard';
+import Dashboard from './features/dashboard/components/Dashboard/Dashboard';
+import { SidebarProvider } from './features/dashboard/context/SidebarContext';
 
 // Protected Route Component
 const ProtectedRoute = ({ children }) => {
@@ -35,10 +36,12 @@ function App() {
           
           {/* Protected Routes */}
           <Route
-            path="/dashboard"
+            path="/dashboard/*"
             element={
               <ProtectedRoute>
-                <Dashboard />
+                <SidebarProvider>
+                  <Dashboard />
+                </SidebarProvider>
               </ProtectedRoute>
             }
           />

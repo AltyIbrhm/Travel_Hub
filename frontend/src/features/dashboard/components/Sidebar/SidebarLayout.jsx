@@ -4,7 +4,7 @@ import { NavLink, useLocation, useNavigate } from 'react-router-dom';
 import { useSidebar } from '../../context/SidebarContext';
 import { toast } from 'react-toastify';
 import authService from '../../../../features/auth/services/authService';
-import './styles.css';
+import './sidebar.styles.css';
 
 const Sidebar = () => {
   const navigate = useNavigate();
