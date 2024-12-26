@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { Container, Row, Col, Card, Form, Button } from 'react-bootstrap';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
@@ -10,6 +10,7 @@ import 'leaflet/dist/leaflet.css';
 import 'leaflet-routing-machine/dist/leaflet-routing-machine.css';
 import 'bootstrap-icons/font/bootstrap-icons.css';
 import './styles.css';
+import authService from '../../../../features/auth/services/authService';
 
 // Fix Leaflet's default icon path issues
 delete L.Icon.Default.prototype._getIconUrl;
@@ -21,33 +22,136 @@ L.Icon.Default.mergeOptions({
 
 const Dashboard = () => {
   const navigate = useNavigate();
-  const user = JSON.parse(localStorage.getItem('user'));
   const mapRef = useRef(null);
   const [mapInstance, setMapInstance] = useState(null);
   const [showProfile, setShowProfile] = useState(false);
-  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const [isCollapsed, setIsCollapsed] = useState(false);
+  const [user, setUser] = useState(null);
   const [bookingData, setBookingData] = useState({
     pickupLocation: '',
     destination: '',
     vehicleType: 'sedan',
     luggage: '0'
   });
-  const [notifications, setNotifications] = useState([
-    {
-      id: 1,
-      title: 'Upcoming Ride',
-      message: 'Your ride to Shopping Mall is scheduled for tomorrow',
-      time: '1 hour ago',
-      unread: true
-    },
-    {
-      id: 2,
-      title: 'Ride Completed',
-      message: 'Your ride to Downtown Hotel has been completed',
-      time: '2 days ago',
-      unread: false
+
+  useEffect(() => {
+    const fetchUserData = async () => {
+      try {
+        const userData = await authService.getCurrentUser();
+        setUser(userData);
+      } catch (error) {
+        console.error('Error fetching user data:', error);
+        authService.logout();
+        navigate('/login');
+      }
+    };
+
+    fetchUserData();
+  }, [navigate]);
+
+  const handleToggle = () => {
+    setIsCollapsed(prev => !prev);
+  };
+
+  useEffect(() => {
+    let map = null;
+    
+    const initMap = () => {
+      if (!mapRef.current || map) return;
+
+      try {
+        map = L.map(mapRef.current, {
+          center: [51.505, -0.09],
+          zoom: 13,
+          zoomControl: true
+        });
+
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+          attribution: '© OpenStreetMap contributors'
+        }).addTo(map);
+
+        const marker = L.marker([51.505, -0.09]).addTo(map);
+        marker.bindPopup("<b>Available Vehicle</b><br>Sedan - 5 mins away").openPopup();
+
+        map.on('click', (e) => {
+          const { lat, lng } = e.latlng;
+          const locationString = `${lat.toFixed(6)}, ${lng.toFixed(6)}`;
+          
+          if (!bookingData.pickupLocation) {
+            setBookingData(prev => ({
+              ...prev,
+              pickupLocation: locationString
+            }));
+            L.marker([lat, lng], {
+              icon: L.divIcon({
+                className: 'pickup-marker',
+                html: '<i class="bi bi-geo-alt text-primary"></i>',
+                iconSize: [25, 25]
+              })
+            }).addTo(map).bindPopup('Pickup Location');
+          } else if (!bookingData.destination) {
+            setBookingData(prev => ({
+              ...prev,
+              destination: locationString
+            }));
+            L.marker([lat, lng], {
+              icon: L.divIcon({
+                className: 'destination-marker',
+                html: '<i class="bi bi-geo-alt-fill text-danger"></i>',
+                iconSize: [25, 25]
+              })
+            }).addTo(map).bindPopup('Destination');
+          }
+        });
+
+        setMapInstance(map);
+
+        setTimeout(() => {
+          map.invalidateSize();
+        }, 100);
+      } catch (error) {
+        console.error('Error initializing map:', error);
+        toast.error('Failed to load map');
+      }
+    };
+
+    initMap();
+
+    return () => {
+      if (map) {
+        map.remove();
+      }
+    };
+  }, [mapRef.current]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Effect to handle map resize when sidebar state changes
+  useEffect(() => {
+    if (mapInstance) {
+      const timer = setTimeout(() => {
+        mapInstance.invalidateSize();
+      }, 300);
+      return () => clearTimeout(timer);
     }
-  ]);
+  }, [isCollapsed, mapInstance]);
+
+  // If no user data, don't render the dashboard
+  if (!user) {
+    return null;
+  }
+
+  const handleBookingChange = (e) => {
+    const { name, value } = e.target;
+    setBookingData(prev => ({
+      ...prev,
+      [name]: value
+    }));
+  };
+
+  const handleBookingSubmit = (e) => {
+    e.preventDefault();
+    console.log('Booking data:', bookingData);
+    toast.success('Booking request submitted!');
+  };
 
   const stats = [
     {
@@ -97,116 +201,25 @@ const Dashboard = () => {
     }
   ];
 
-  useEffect(() => {
-    let map = null;
-    
-    const initMap = () => {
-      if (!mapRef.current || map) return;
-
-      try {
-        // Initialize the map
-        map = L.map(mapRef.current, {
-          center: [51.505, -0.09],
-          zoom: 13,
-          zoomControl: true
-        });
-
-        // Add tile layer
-        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-          attribution: '© OpenStreetMap contributors'
-        }).addTo(map);
-
-        // Add example markers
-        const marker = L.marker([51.505, -0.09]).addTo(map);
-        marker.bindPopup("<b>Available Vehicle</b><br>Sedan - 5 mins away").openPopup();
-
-        // Add click handler for location selection
-        map.on('click', (e) => {
-          const { lat, lng } = e.latlng;
-          // Update the form with clicked coordinates
-          const locationString = `${lat.toFixed(6)}, ${lng.toFixed(6)}`;
-          
-          // If pickup is empty, fill pickup, otherwise fill destination
-          if (!bookingData.pickupLocation) {
-            setBookingData(prev => ({
-              ...prev,
-              pickupLocation: locationString
-            }));
-            // Add marker for pickup
-            L.marker([lat, lng], {
-              icon: L.divIcon({
-                className: 'pickup-marker',
-                html: '<i class="bi bi-geo-alt text-primary"></i>',
-                iconSize: [25, 25]
-              })
-            }).addTo(map).bindPopup('Pickup Location');
-          } else if (!bookingData.destination) {
-            setBookingData(prev => ({
-              ...prev,
-              destination: locationString
-            }));
-            // Add marker for destination
-            L.marker([lat, lng], {
-              icon: L.divIcon({
-                className: 'destination-marker',
-                html: '<i class="bi bi-geo-alt-fill text-danger"></i>',
-                iconSize: [25, 25]
-              })
-            }).addTo(map).bindPopup('Destination');
-          }
-        });
-
-        setMapInstance(map);
-
-        // Force a map resize
-        setTimeout(() => {
-          map.invalidateSize();
-        }, 100);
-      } catch (error) {
-        console.error('Error initializing map:', error);
-        toast.error('Failed to load map');
-      }
-    };
-
-    initMap();
-
-    // Cleanup function
-    return () => {
-      if (map) {
-        map.remove();
-      }
-    };
-  }, [mapRef.current]); // eslint-disable-line react-hooks/exhaustive-deps
-
-  const handleBookingChange = (e) => {
-    const { name, value } = e.target;
-    setBookingData(prev => ({
-      ...prev,
-      [name]: value
-    }));
-  };
-
-  const handleBookingSubmit = (e) => {
-    e.preventDefault();
-    // Add your booking submission logic here
-    console.log('Booking data:', bookingData);
-    toast.success('Booking request submitted!');
-  };
-
-  const handleSidebarToggle = () => {
-    setSidebarCollapsed(!sidebarCollapsed);
-  };
-
   return (
     <div className="dashboard-wrapper">
-      <Sidebar isCollapsed={sidebarCollapsed} onToggle={handleSidebarToggle} />
-      
-      <main className={`dashboard-content ${sidebarCollapsed ? 'sidebar-collapsed' : ''}`}>
+      <Sidebar 
+        isCollapsed={isCollapsed} 
+        onToggle={handleToggle} 
+      />
+      <main className={`dashboard-content ${isCollapsed ? 'sidebar-collapsed' : ''}`}>
         <Container fluid>
           {/* Header Section */}
           <Row className="header-row align-items-center mb-4">
-            <Col>
-              <h1 className="dashboard-title">Welcome back, {user?.firstName}!</h1>
+            <Col className="d-flex align-items-center">
+              <button 
+                className="sidebar-toggle me-3"
+                onClick={handleToggle}
+                aria-label="Toggle Sidebar"
+              >
+                <i className="bi bi-list"></i>
+              </button>
+              <h1 className="dashboard-title mb-0">Welcome back, {user?.firstName}!</h1>
             </Col>
           </Row>
 

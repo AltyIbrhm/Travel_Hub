@@ -1,58 +1,97 @@
-import React from 'react';
-import { Nav, Image } from 'react-bootstrap';
-import { NavLink, useLocation } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { Nav, Image, Badge, OverlayTrigger, Tooltip } from 'react-bootstrap';
+import { NavLink, useLocation, useNavigate } from 'react-router-dom';
 import './styles.css';
 
 const Sidebar = ({ isCollapsed = false, onToggle }) => {
-  const user = JSON.parse(localStorage.getItem('user'));
+  const navigate = useNavigate();
   const location = useLocation();
-
-  const handleClick = (e) => {
-    e.preventDefault();
-    e.stopPropagation();
-    if (typeof onToggle === 'function') {
-      onToggle();
+  const [showUserMenu, setShowUserMenu] = useState(false);
+  
+  // Get user data with validation
+  const getUserData = () => {
+    try {
+      const userData = localStorage.getItem('user');
+      if (!userData) {
+        navigate('/login');
+        return null;
+      }
+      return JSON.parse(userData);
+    } catch (error) {
+      console.error('Error parsing user data:', error);
+      navigate('/login');
+      return null;
     }
   };
 
+  const user = getUserData();
+
+  // If no user data, don't render the sidebar
+  if (!user) {
+    return null;
+  }
+
+  const quickActions = [
+    { icon: 'bi-plus-circle', label: 'New Booking', action: () => navigate('/bookings/new') },
+    { icon: 'bi-clock-history', label: 'Recent Rides', action: () => navigate('/rides') },
+    { icon: 'bi-star', label: 'Favorites', action: () => navigate('/favorites') }
+  ];
+
   const navigationItems = [
     {
-      section: 'Main',
+      section: 'MAIN',
       items: [
-        { path: '/dashboard', icon: 'bi-speedometer2', label: 'Dashboard' },
-        { path: '/rides', icon: 'bi-car-front', label: 'My Rides' },
-        { path: '/bookings', icon: 'bi-calendar-check', label: 'Bookings' }
+        { 
+          path: '/dashboard', 
+          icon: 'bi-speedometer2', 
+          label: 'Dashboard',
+          badge: { text: 'New', variant: 'primary' }
+        },
+        { 
+          path: '/rides', 
+          icon: 'bi-car-front', 
+          label: 'My Rides',
+          badge: { text: '2', variant: 'danger' }
+        },
+        { 
+          path: '/bookings', 
+          icon: 'bi-calendar-check', 
+          label: 'Bookings',
+          badge: { text: '1', variant: 'warning' }
+        }
       ]
     },
     {
-      section: 'Account',
+      section: 'ACCOUNT',
       items: [
         { path: '/profile', icon: 'bi-person', label: 'Profile' },
-        { path: '/settings', icon: 'bi-gear', label: 'Settings' },
-        { path: '/wallet', icon: 'bi-wallet2', label: 'Wallet' }
+        { 
+          path: '/wallet', 
+          icon: 'bi-wallet2', 
+          label: 'Wallet',
+          badge: { text: '$128', variant: 'success' }
+        },
+        { path: '/favorites', icon: 'bi-heart', label: 'Favorites' },
+        { path: '/settings', icon: 'bi-gear', label: 'Settings' }
       ]
     },
     {
-      section: 'Support',
+      section: 'SUPPORT',
       items: [
         { path: '/help', icon: 'bi-question-circle', label: 'Help Center' },
-        { path: '/contact', icon: 'bi-chat-dots', label: 'Contact Us' }
+        { 
+          path: '/messages', 
+          icon: 'bi-chat-dots', 
+          label: 'Messages',
+          badge: { text: '3', variant: 'primary' }
+        },
+        { path: '/contact', icon: 'bi-telephone', label: 'Contact Us' }
       ]
     }
   ];
 
   return (
-    <div className={`sidebar ${isCollapsed ? 'collapsed' : ''}`}>
-      <button 
-        className="collapse-button"
-        onClick={handleClick}
-        type="button"
-        aria-label={isCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
-      >
-        <i className={`bi bi-chevron-${isCollapsed ? 'right' : 'left'}`}></i>
-      </button>
-
-      {/* Logo and Brand */}
+    <aside className={`sidebar ${isCollapsed ? 'collapsed' : ''}`}>
       <div className="sidebar-header">
         <NavLink to="/dashboard" className="brand-link">
           <i className="bi bi-car-front text-primary"></i>
@@ -60,23 +99,46 @@ const Sidebar = ({ isCollapsed = false, onToggle }) => {
         </NavLink>
       </div>
 
-      {/* User Profile Section */}
       <div className="sidebar-user">
-        <Image
-          src={user?.profilePicture || 'https://via.placeholder.com/32'}
-          roundedCircle
-          className="user-avatar"
-          alt="Profile"
-        />
+        <div className="user-avatar-wrapper">
+          <Image
+            src={user?.profilePicture || 'https://via.placeholder.com/40'}
+            roundedCircle
+            className="user-avatar"
+            alt="Profile"
+          />
+          <span className="user-status online"></span>
+        </div>
         {!isCollapsed && (
           <div className="user-info">
             <div className="user-name">{user?.firstName} {user?.lastName}</div>
-            <div className="user-role">Passenger</div>
+            <div className="user-role">
+              <span className="status-dot"></span>
+              Passenger
+            </div>
           </div>
         )}
       </div>
 
-      {/* Navigation Sections */}
+      <div className="quick-actions">
+        {quickActions.map((action, index) => (
+          <OverlayTrigger
+            key={index}
+            placement="right"
+            overlay={isCollapsed ? <Tooltip>{action.label}</Tooltip> : <></>}
+          >
+            <button
+              className="quick-action-button"
+              onClick={action.action}
+              aria-label={action.label}
+            >
+              <i className={`bi ${action.icon}`}></i>
+              {!isCollapsed && <span>{action.label}</span>}
+            </button>
+          </OverlayTrigger>
+        ))}
+      </div>
+
       <Nav className="sidebar-nav">
         {navigationItems.map((section, index) => (
           <div key={index} className="nav-section">
@@ -84,31 +146,41 @@ const Sidebar = ({ isCollapsed = false, onToggle }) => {
               <div className="nav-section-title">{section.section}</div>
             )}
             {section.items.map((item, itemIndex) => (
-              <NavLink
+              <OverlayTrigger
                 key={itemIndex}
-                to={item.path}
-                className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}
-                title={isCollapsed ? item.label : undefined}
+                placement="right"
+                overlay={isCollapsed ? <Tooltip>{item.label}</Tooltip> : <></>}
               >
-                <i className={`bi ${item.icon}`}></i>
-                {!isCollapsed && <span>{item.label}</span>}
-                {item.path === '/rides' && !isCollapsed && (
-                  <span className="notification-badge">2</span>
-                )}
-              </NavLink>
+                <NavLink
+                  to={item.path}
+                  className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}
+                >
+                  <i className={`bi ${item.icon}`}></i>
+                  {!isCollapsed && <span>{item.label}</span>}
+                  {!isCollapsed && item.badge && (
+                    <Badge bg={item.badge.variant} className="nav-badge">
+                      {item.badge.text}
+                    </Badge>
+                  )}
+                </NavLink>
+              </OverlayTrigger>
             ))}
           </div>
         ))}
       </Nav>
 
-      {/* Sidebar Footer */}
       <div className="sidebar-footer">
-        <NavLink to="/logout" className="help-link">
-          <i className="bi bi-box-arrow-right"></i>
-          {!isCollapsed && <span>Logout</span>}
-        </NavLink>
+        <OverlayTrigger
+          placement="right"
+          overlay={isCollapsed ? <Tooltip>Logout</Tooltip> : <></>}
+        >
+          <NavLink to="/logout" className="help-link">
+            <i className="bi bi-box-arrow-right"></i>
+            {!isCollapsed && <span>Logout</span>}
+          </NavLink>
+        </OverlayTrigger>
       </div>
-    </div>
+    </aside>
   );
 };
 

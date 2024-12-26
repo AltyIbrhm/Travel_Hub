@@ -3,6 +3,7 @@ const router = express.Router();
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const { getConnection } = require('../config/database');
+const { authenticateToken } = require('../middleware/auth');
 
 /**
  * @swagger
@@ -524,6 +525,63 @@ router.post('/reset-password', async (req, res) => {
     console.error('Reset password error:', error);
     res.status(500).json({
       message: 'Error resetting password',
+      error: process.env.NODE_ENV === 'development' ? error.message : undefined
+    });
+  }
+});
+
+/**
+ * @swagger
+ * /api/auth/me:
+ *   get:
+ *     summary: Get current user profile
+ *     tags: [Auth]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Current user profile
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 id:
+ *                   type: string
+ *                 email:
+ *                   type: string
+ *                 firstName:
+ *                   type: string
+ *                 lastName:
+ *                   type: string
+ *                 role:
+ *                   type: string
+ *       401:
+ *         description: Not authenticated
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ */
+router.get('/me', authenticateToken, async (req, res) => {
+  try {
+    const pool = await getConnection();
+    const result = await pool.request()
+      .input('userId', req.user.id)
+      .query('SELECT id, email, firstName, lastName, phoneNumber FROM Users WHERE id = @userId');
+
+    if (result.recordset.length === 0) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    res.json(result.recordset[0]);
+  } catch (error) {
+    console.error('Error fetching user profile:', error);
+    res.status(500).json({ 
+      message: 'Error fetching user profile',
       error: process.env.NODE_ENV === 'development' ? error.message : undefined
     });
   }
