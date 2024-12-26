@@ -1,27 +1,35 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { Nav, Image } from 'react-bootstrap';
 import { NavLink, useLocation } from 'react-router-dom';
-import { useAuth } from '../../../../shared/hooks/useAuth';
 import './styles.css';
 
-const Sidebar = () => {
-  const { user } = useAuth();
+const Sidebar = ({ isCollapsed = false, onToggle }) => {
+  const user = JSON.parse(localStorage.getItem('user'));
   const location = useLocation();
-  const [isCollapsed, setIsCollapsed] = useState(false);
+
+  const handleClick = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    console.log('Sidebar: handleClick called');
+    if (typeof onToggle === 'function') {
+      onToggle();
+    }
+  };
 
   return (
     <div className={`sidebar ${isCollapsed ? 'collapsed' : ''}`}>
-      {/* Toggle Button */}
       <button 
         className="collapse-button"
-        onClick={() => setIsCollapsed(!isCollapsed)}
+        onClick={handleClick}
+        type="button"
+        aria-label={isCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
       >
         <i className={`bi bi-chevron-${isCollapsed ? 'right' : 'left'}`}></i>
       </button>
 
       {/* Logo and Brand */}
       <div className="sidebar-header">
-        <NavLink to="/" className="brand-link">
+        <NavLink to="/dashboard" className="brand-link">
           <i className="bi bi-car-front text-primary"></i>
           {!isCollapsed && <span>TravelHub</span>}
         </NavLink>
@@ -49,7 +57,7 @@ const Sidebar = () => {
         <div className="nav-section">
           {!isCollapsed && <div className="nav-section-title">MAIN</div>}
           <Nav.Item>
-            <NavLink to="/" className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`} title="Dashboard">
+            <NavLink to="/dashboard" className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`} title="Dashboard">
               <i className="bi bi-speedometer2"></i>
               {!isCollapsed && <span>Dashboard</span>}
             </NavLink>

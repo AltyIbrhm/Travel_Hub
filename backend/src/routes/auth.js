@@ -6,6 +6,42 @@ const { getConnection } = require('../config/database');
 
 /**
  * @swagger
+ * components:
+ *   schemas:
+ *     ForgotPasswordRequest:
+ *       type: object
+ *       required:
+ *         - email
+ *       properties:
+ *         email:
+ *           type: string
+ *           format: email
+ *           description: User's email address
+ *     ForgotPasswordResponse:
+ *       type: object
+ *       properties:
+ *         message:
+ *           type: string
+ *           description: Response message
+ *         resetToken:
+ *           type: string
+ *           description: Password reset token (only in development)
+ *     ResetPasswordRequest:
+ *       type: object
+ *       required:
+ *         - token
+ *         - newPassword
+ *       properties:
+ *         token:
+ *           type: string
+ *           description: Reset token received via email
+ *         newPassword:
+ *           type: string
+ *           description: New password to set
+ */
+
+/**
+ * @swagger
  * /api/auth/login:
  *   post:
  *     summary: Login to the application
@@ -33,9 +69,67 @@ const { getConnection } = require('../config/database');
  *       400:
  *         description: Invalid request
  */
-router.post('/login', (req, res) => {
-  // Login logic will be implemented here
-  res.status(501).json({ message: 'Login endpoint not implemented yet' });
+router.post('/login', async (req, res) => {
+  try {
+    const { email, password } = req.body;
+
+    // Validate required fields
+    if (!email || !password) {
+      return res.status(400).json({
+        message: 'Email and password are required'
+      });
+    }
+
+    const pool = await getConnection();
+
+    // Find user by email
+    const result = await pool.request()
+      .input('email', email.toLowerCase())
+      .query('SELECT * FROM Users WHERE email = @email');
+
+    if (result.recordset.length === 0) {
+      return res.status(401).json({
+        message: 'Invalid email or password'
+      });
+    }
+
+    const user = result.recordset[0];
+
+    // Verify password
+    const isValidPassword = await bcrypt.compare(password, user.password);
+    if (!isValidPassword) {
+      return res.status(401).json({
+        message: 'Invalid email or password'
+      });
+    }
+
+    // Generate JWT token
+    const token = jwt.sign(
+      { userId: user.id },
+      process.env.JWT_SECRET || 'your-default-secret-key',
+      { expiresIn: '24h' }
+    );
+
+    // Return user data and token
+    res.json({
+      message: 'Login successful',
+      token,
+      user: {
+        id: user.id,
+        email: user.email,
+        firstName: user.firstName,
+        lastName: user.lastName,
+        phoneNumber: user.phoneNumber
+      }
+    });
+
+  } catch (error) {
+    console.error('Login error:', error);
+    res.status(500).json({
+      message: 'Error during login',
+      error: process.env.NODE_ENV === 'development' ? error.message : undefined
+    });
+  }
 });
 
 /**
@@ -218,6 +312,218 @@ router.post('/check-email', async (req, res) => {
     console.error('Email check error:', error);
     res.status(500).json({ 
       message: 'Error checking email availability',
+      error: process.env.NODE_ENV === 'development' ? error.message : undefined
+    });
+  }
+});
+
+/**
+ * @swagger
+ * /api/auth/forgot-password:
+ *   post:
+ *     summary: Request a password reset link
+ *     tags: [Auth]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/ForgotPasswordRequest'
+ *     responses:
+ *       200:
+ *         description: Password reset email sent
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ForgotPasswordResponse'
+ *       400:
+ *         description: Invalid email or email not found
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *       500:
+ *         description: Server error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                 error:
+ *                   type: string
+ */
+router.post('/forgot-password', async (req, res) => {
+  try {
+    const { email } = req.body;
+
+    if (!email) {
+      return res.status(400).json({ 
+        message: 'Email is required' 
+      });
+    }
+
+    const pool = await getConnection();
+
+    // Add columns if they don't exist
+    try {
+      await pool.request().query(`
+        IF NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID('Users') AND name = 'resetToken')
+        BEGIN
+            ALTER TABLE Users
+            ADD resetToken NVARCHAR(MAX)
+        END
+
+        IF NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID('Users') AND name = 'resetTokenExpiry')
+        BEGIN
+            ALTER TABLE Users
+            ADD resetTokenExpiry DATETIME
+        END
+      `);
+    } catch (err) {
+      console.error('Error adding columns:', err);
+    }
+    
+    // Check if user exists
+    const result = await pool.request()
+      .input('email', email.toLowerCase())
+      .query('SELECT id, firstName FROM Users WHERE email = @email');
+
+    if (result.recordset.length === 0) {
+      return res.status(400).json({
+        message: 'No account found with this email address'
+      });
+    }
+
+    const user = result.recordset[0];
+
+    // Generate reset token
+    const resetToken = jwt.sign(
+      { userId: user.id },
+      process.env.JWT_SECRET || 'your-default-secret-key',
+      { expiresIn: '1h' }
+    );
+
+    // Store reset token and expiry in database
+    await pool.request()
+      .input('userId', user.id)
+      .input('resetToken', resetToken)
+      .input('resetTokenExpiry', new Date(Date.now() + 3600000)) // 1 hour from now
+      .query(`
+        UPDATE Users 
+        SET resetToken = @resetToken,
+            resetTokenExpiry = @resetTokenExpiry,
+            updatedAt = GETDATE()
+        WHERE id = @userId
+      `);
+
+    // TODO: Send reset email
+    // For now, we'll just return the token in the response
+    // In production, you should send this via email
+    res.json({
+      message: 'Password reset instructions have been sent to your email',
+      resetToken // Remove this in production
+    });
+
+  } catch (error) {
+    console.error('Forgot password error:', error);
+    res.status(500).json({ 
+      message: 'Error processing password reset request',
+      error: process.env.NODE_ENV === 'development' ? error.message : undefined
+    });
+  }
+});
+
+/**
+ * @swagger
+ * /api/auth/reset-password:
+ *   post:
+ *     summary: Reset user's password using reset token
+ *     tags: [Auth]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/ResetPasswordRequest'
+ *     responses:
+ *       200:
+ *         description: Password reset successful
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *       400:
+ *         description: Invalid token or password
+ *       404:
+ *         description: User not found
+ */
+router.post('/reset-password', async (req, res) => {
+  try {
+    const { token, newPassword } = req.body;
+
+    if (!token || !newPassword) {
+      return res.status(400).json({
+        message: 'Token and new password are required'
+      });
+    }
+
+    // Verify token
+    let decoded;
+    try {
+      decoded = jwt.verify(token, process.env.JWT_SECRET || 'your-default-secret-key');
+    } catch (err) {
+      return res.status(400).json({
+        message: 'Invalid or expired reset token'
+      });
+    }
+
+    const pool = await getConnection();
+
+    // Check if user exists and token matches
+    const userResult = await pool.request()
+      .input('userId', decoded.userId)
+      .input('resetToken', token)
+      .query('SELECT * FROM Users WHERE id = @userId AND resetToken = @resetToken AND resetTokenExpiry > GETDATE()');
+
+    if (userResult.recordset.length === 0) {
+      return res.status(404).json({
+        message: 'Invalid or expired reset token'
+      });
+    }
+
+    // Hash new password
+    const salt = await bcrypt.genSalt(10);
+    const hashedPassword = await bcrypt.hash(newPassword, salt);
+
+    // Update password and clear reset token
+    await pool.request()
+      .input('userId', decoded.userId)
+      .input('password', hashedPassword)
+      .query(`
+        UPDATE Users 
+        SET password = @password,
+            resetToken = NULL,
+            resetTokenExpiry = NULL,
+            updatedAt = GETDATE()
+        WHERE id = @userId
+      `);
+
+    res.json({
+      message: 'Password has been successfully reset'
+    });
+
+  } catch (error) {
+    console.error('Reset password error:', error);
+    res.status(500).json({
+      message: 'Error resetting password',
       error: process.env.NODE_ENV === 'development' ? error.message : undefined
     });
   }

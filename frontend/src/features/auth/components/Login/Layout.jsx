@@ -1,46 +1,22 @@
 import React, { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
-import { Form, Button, Card, Container, Alert, InputGroup } from 'react-bootstrap';
-import { useAuth } from '../../../../shared/hooks/useAuth';
+import { Link } from 'react-router-dom';
+import { Form, Button, Card, Alert, InputGroup } from 'react-bootstrap';
+import { FaEye as EyeIcon, FaEyeSlash as EyeSlashIcon } from 'react-icons/fa';
 import './styles.css';
 
-const LoginLayout = () => {
-  const navigate = useNavigate();
-  const { login } = useAuth();
-  const [formData, setFormData] = useState({
-    email: '',
-    password: '',
-    rememberMe: false
-  });
+const LoginLayout = ({
+  email,
+  password,
+  error,
+  isLoading,
+  handleEmailChange,
+  handlePasswordChange,
+  handleSubmit
+}) => {
   const [showPassword, setShowPassword] = useState(false);
-  const [error, setError] = useState('');
-  const [isLoading, setIsLoading] = useState(false);
-
-  const handleChange = (e) => {
-    const { name, value, checked } = e.target;
-    setFormData(prev => ({
-      ...prev,
-      [name]: name === 'rememberMe' ? checked : value
-    }));
-  };
 
   const togglePasswordVisibility = () => {
     setShowPassword(!showPassword);
-  };
-
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    setError('');
-    setIsLoading(true);
-
-    try {
-      await login(formData.email, formData.password);
-      navigate('/dashboard');
-    } catch (err) {
-      setError(err.message || 'Failed to login');
-    } finally {
-      setIsLoading(false);
-    }
   };
 
   return (
@@ -63,49 +39,36 @@ const LoginLayout = () => {
               <Form.Label>Email</Form.Label>
               <Form.Control
                 type="email"
-                name="email"
-                value={formData.email}
-                onChange={handleChange}
+                value={email}
+                onChange={handleEmailChange}
                 placeholder="Enter your email"
                 required
               />
             </Form.Group>
 
             <Form.Group className="mb-4">
-              <div className="d-flex justify-content-between align-items-center">
-                <Form.Label>Password</Form.Label>
-                <Link to="/forgot-password" className="login-forgot-link">
-                  Forgot Password?
-                </Link>
-              </div>
+              <Form.Label>Password</Form.Label>
               <InputGroup>
                 <Form.Control
                   type={showPassword ? "text" : "password"}
-                  name="password"
-                  value={formData.password}
-                  onChange={handleChange}
+                  value={password}
+                  onChange={handlePasswordChange}
                   placeholder="Enter your password"
                   required
                 />
-                <Button 
+                <Button
                   variant="outline-secondary"
                   onClick={togglePasswordVisibility}
                   type="button"
                 >
-                  <i className={`bi bi-eye${showPassword ? '-slash' : ''}`}></i>
+                  {showPassword ? <EyeSlashIcon /> : <EyeIcon />}
                 </Button>
               </InputGroup>
-            </Form.Group>
-
-            <Form.Group className="mb-4">
-              <Form.Check
-                type="checkbox"
-                name="rememberMe"
-                checked={formData.rememberMe}
-                onChange={handleChange}
-                label="Remember me"
-                className="login-remember-me"
-              />
+              <div className="d-flex justify-content-end mt-2">
+                <Link to="/forgot-password" className="forgot-password-link">
+                  Forgot Password?
+                </Link>
+              </div>
             </Form.Group>
 
             <Button
@@ -114,12 +77,12 @@ const LoginLayout = () => {
               className="login-submit-btn"
               disabled={isLoading}
             >
-              {isLoading ? 'Signing in...' : 'Sign In'}
+              {isLoading ? 'Signing In...' : 'Sign In'}
             </Button>
 
-            <div className="login-signup-text">
+            <div className="text-center mt-3">
               Don't have an account?{' '}
-              <Link to="/signup" className="login-signup-link">
+              <Link to="/signup" className="signup-link">
                 Sign Up
               </Link>
             </div>

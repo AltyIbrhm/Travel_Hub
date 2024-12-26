@@ -1,7 +1,7 @@
 import React from 'react';
-import { Container, Row, Col, Card, Form, Button, Alert } from 'react-bootstrap';
 import { Link } from 'react-router-dom';
-import { useTranslation } from 'react-i18next';
+import { Form, Button, Card, Alert, InputGroup } from 'react-bootstrap';
+import { FaEye as EyeIcon, FaEyeSlash as EyeSlashIcon } from 'react-icons/fa';
 import './styles.css';
 
 const ResetPasswordLayout = ({
@@ -15,101 +15,147 @@ const ResetPasswordLayout = ({
   handleConfirmPasswordChange,
   handleSubmit
 }) => {
-  const { t } = useTranslation();
+  const [showPassword, setShowPassword] = React.useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = React.useState(false);
+
+  const togglePasswordVisibility = (field) => {
+    if (field === 'password') {
+      setShowPassword(!showPassword);
+    } else {
+      setShowConfirmPassword(!showConfirmPassword);
+    }
+  };
+
+  const passwordRequirements = {
+    length: password.length >= 8,
+    uppercase: /[A-Z]/.test(password),
+    lowercase: /[a-z]/.test(password),
+    number: /\d/.test(password),
+    special: /[!@#$%^&*]/.test(password)
+  };
 
   if (!token) {
     return (
-      <Container className="reset-password-wrapper">
-        <Row className="justify-content-center">
-          <Col md={6} lg={4}>
-            <Card className="shadow reset-password-card">
-              <Card.Body>
-                <Alert variant="danger" className="reset-password-invalid-token">
-                  {t('auth.resetPassword.invalidToken')}
-                </Alert>
-                <Link to="/forgot-password" className="btn btn-primary w-100">
-                  {t('auth.resetPassword.requestNewLink')}
-                </Link>
-              </Card.Body>
-            </Card>
-          </Col>
-        </Row>
-      </Container>
+      <div className="reset-password-container">
+        <Card className="reset-password-card">
+          <Card.Body>
+            <div className="text-center mb-4">
+              <h2 className="reset-password-title">Invalid Reset Link</h2>
+              <p className="reset-password-subtitle">This password reset link is invalid or has expired.</p>
+            </div>
+            <div className="text-center">
+              <Link to="/forgot-password" className="reset-password-link">
+                Request a new reset link
+              </Link>
+            </div>
+          </Card.Body>
+        </Card>
+      </div>
     );
   }
 
   return (
-    <Container>
-      <Row className="justify-content-center align-items-center min-vh-100">
-        <Col md={6} lg={5}>
-          <Card className="shadow-sm reset-password-card">
-            <Card.Body>
-              <div className="text-center mb-4">
-                <h2 className="reset-password-title">{t('auth.resetPassword.title')}</h2>
-                <p className="reset-password-subtitle">{t('auth.resetPassword.subtitle')}</p>
-              </div>
+    <div className="reset-password-container">
+      <Card className="reset-password-card">
+        <Card.Body>
+          <div className="text-center mb-4">
+            <h2 className="reset-password-title">Reset Password</h2>
+            <p className="reset-password-subtitle">Enter your new password below</p>
+          </div>
 
-              {error && <Alert variant="danger">{error}</Alert>}
-              {success && (
-                <Alert variant="success">
-                  {success}
-                  <div className="mt-3">
-                    <Link to="/login" className="btn btn-primary w-100">
-                      {t('auth.resetPassword.backToLogin')}
-                    </Link>
-                  </div>
-                </Alert>
-              )}
+          {error && (
+            <Alert variant="danger" className="mb-4">
+              {error}
+            </Alert>
+          )}
 
-              {!success && (
-                <Form onSubmit={handleSubmit}>
-                  <Form.Group className="reset-password-form-group">
-                    <Form.Label className="reset-password-form-label">
-                      {t('auth.resetPassword.newPassword')}
-                      <span className="reset-password-required">*</span>
-                    </Form.Label>
-                    <Form.Control
-                      type="password"
-                      value={password}
-                      onChange={handlePasswordChange}
-                      required
-                      className="reset-password-form-control"
-                    />
-                  </Form.Group>
+          {success && (
+            <Alert variant="success" className="mb-4">
+              {success}
+            </Alert>
+          )}
 
-                  <Form.Group className="reset-password-form-group">
-                    <Form.Label className="reset-password-form-label">
-                      {t('auth.resetPassword.confirmPassword')}
-                      <span className="reset-password-required">*</span>
-                    </Form.Label>
-                    <Form.Control
-                      type="password"
-                      value={confirmPassword}
-                      onChange={handleConfirmPasswordChange}
-                      required
-                      className="reset-password-form-control"
-                    />
-                  </Form.Group>
+          <Form onSubmit={handleSubmit}>
+            <Form.Group className="mb-3">
+              <Form.Label>New Password</Form.Label>
+              <InputGroup>
+                <Form.Control
+                  type={showPassword ? "text" : "password"}
+                  value={password}
+                  onChange={handlePasswordChange}
+                  placeholder="Enter your new password"
+                  required
+                />
+                <Button
+                  variant="outline-secondary"
+                  onClick={() => togglePasswordVisibility('password')}
+                  type="button"
+                >
+                  {showPassword ? <EyeSlashIcon /> : <EyeIcon />}
+                </Button>
+              </InputGroup>
+            </Form.Group>
 
-                  <Button
-                    type="submit"
-                    variant="primary"
-                    disabled={isLoading}
-                    className="reset-password-submit-btn"
-                  >
-                    {isLoading ? t('common.loading') : t('auth.resetPassword.resetPassword')}
-                  </Button>
+            <div className="password-requirements mb-3">
+              <p className="requirement-title">Password must contain:</p>
+              <ul>
+                <li className={passwordRequirements.length ? 'met' : ''}>
+                  At least 8 characters
+                </li>
+                <li className={passwordRequirements.uppercase ? 'met' : ''}>
+                  At least one uppercase letter
+                </li>
+                <li className={passwordRequirements.lowercase ? 'met' : ''}>
+                  At least one lowercase letter
+                </li>
+                <li className={passwordRequirements.number ? 'met' : ''}>
+                  At least one number
+                </li>
+                <li className={passwordRequirements.special ? 'met' : ''}>
+                  At least one special character (!@#$%^&*)
+                </li>
+              </ul>
+            </div>
 
-                  <Link to="/login" className="reset-password-back-link">
-                    {t('auth.resetPassword.backToLogin')}
-                  </Link>
-                </Form>
-              )}
-            </Card.Body>
-          </Card>
-        </Col>
-      </Row>
-    </Container>
+            <Form.Group className="mb-4">
+              <Form.Label>Confirm New Password</Form.Label>
+              <InputGroup>
+                <Form.Control
+                  type={showConfirmPassword ? "text" : "password"}
+                  value={confirmPassword}
+                  onChange={handleConfirmPasswordChange}
+                  placeholder="Confirm your new password"
+                  required
+                />
+                <Button
+                  variant="outline-secondary"
+                  onClick={() => togglePasswordVisibility('confirm')}
+                  type="button"
+                >
+                  {showConfirmPassword ? <EyeSlashIcon /> : <EyeIcon />}
+                </Button>
+              </InputGroup>
+            </Form.Group>
+
+            <Button
+              variant="primary"
+              type="submit"
+              className="reset-password-submit-btn"
+              disabled={isLoading}
+            >
+              {isLoading ? 'Resetting Password...' : 'Reset Password'}
+            </Button>
+
+            <div className="text-center mt-3">
+              Remember your password?{' '}
+              <Link to="/login" className="reset-password-login-link">
+                Back to Login
+              </Link>
+            </div>
+          </Form>
+        </Card.Body>
+      </Card>
+    </div>
   );
 };
 

@@ -27,6 +27,21 @@ const ResetPassword = () => {
     setError('');
     setSuccess('');
 
+    // Validate password requirements
+    const passwordRequirements = {
+      length: password.length >= 8,
+      uppercase: /[A-Z]/.test(password),
+      lowercase: /[a-z]/.test(password),
+      number: /\d/.test(password),
+      special: /[!@#$%^&*]/.test(password)
+    };
+
+    if (!Object.values(passwordRequirements).every(Boolean)) {
+      setError('Please ensure all password requirements are met');
+      setIsLoading(false);
+      return;
+    }
+
     // Validate passwords match
     if (password !== confirmPassword) {
       setError('Passwords do not match');
@@ -34,26 +49,30 @@ const ResetPassword = () => {
       return;
     }
 
-    // Validate password length
-    if (password.length < 6) {
-      setError('Password must be at least 6 characters long');
-      setIsLoading(false);
-      return;
-    }
-
     try {
-      await fetch(`http://localhost:5000/api/auth/reset-password/${token}`, {
+      const response = await fetch('http://localhost:5000/api/auth/reset-password', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ password }),
+        body: JSON.stringify({ 
+          token,
+          newPassword: password 
+        }),
       });
 
-      setSuccess(true);
-      navigate('/login');
-    } catch (error) {
-      setError('Failed to reset password. Please try again.');
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.message || 'Failed to reset password');
+      }
+
+      setSuccess('Password has been successfully reset');
+      setTimeout(() => {
+        navigate('/login');
+      }, 3000);
+    } catch (err) {
+      setError(err.message || 'Failed to reset password. Please try again.');
     } finally {
       setIsLoading(false);
     }

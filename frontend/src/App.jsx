@@ -10,6 +10,18 @@ import Signup from './features/auth/components/Signup';
 import ForgotPassword from './features/auth/components/ForgotPassword';
 import ResetPassword from './features/auth/components/ResetPassword';
 
+// Dashboard Component
+import Dashboard from './features/dashboard/components/Dashboard';
+
+// Protected Route Component
+const ProtectedRoute = ({ children }) => {
+  const token = localStorage.getItem('token');
+  if (!token) {
+    return <Navigate to="/login" replace />;
+  }
+  return children;
+};
+
 function App() {
   return (
     <div className="app">
@@ -21,8 +33,19 @@ function App() {
           <Route path="/forgot-password" element={<ForgotPassword />} />
           <Route path="/reset-password" element={<ResetPassword />} />
           
+          {/* Protected Routes */}
+          <Route
+            path="/dashboard"
+            element={
+              <ProtectedRoute>
+                <Dashboard />
+              </ProtectedRoute>
+            }
+          />
+          
           {/* Default redirect */}
-          <Route path="*" element={<Navigate to="/login" replace />} />
+          <Route path="/" element={<Navigate to="/dashboard" replace />} />
+          <Route path="*" element={<Navigate to="/dashboard" replace />} />
         </Routes>
       </Container>
       <ToastContainer />
