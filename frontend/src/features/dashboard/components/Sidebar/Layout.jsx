@@ -2,6 +2,8 @@ import React, { useState } from 'react';
 import { Nav, Image, Badge, OverlayTrigger, Tooltip } from 'react-bootstrap';
 import { NavLink, useLocation, useNavigate } from 'react-router-dom';
 import { useSidebar } from '../../context/SidebarContext';
+import { toast } from 'react-toastify';
+import authService from '../../../../features/auth/services/authService';
 import './styles.css';
 
 const Sidebar = () => {
@@ -31,6 +33,18 @@ const Sidebar = () => {
   if (!user) {
     return null;
   }
+
+  const handleLogout = () => {
+    try {
+      authService.logout();
+      localStorage.removeItem('user');
+      toast.success('Logged out successfully');
+      navigate('/login');
+    } catch (error) {
+      console.error('Logout error:', error);
+      toast.error('Error logging out');
+    }
+  };
 
   const quickActions = [
     { icon: 'bi-plus-circle', label: 'New Booking', action: () => navigate('/bookings/new') },
@@ -182,10 +196,10 @@ const Sidebar = () => {
           placement="right"
           overlay={isCollapsed ? <Tooltip>Logout</Tooltip> : <></>}
         >
-          <NavLink to="/logout" className="help-link">
+          <button onClick={handleLogout} className="help-link">
             <i className="bi bi-box-arrow-right"></i>
             {!isCollapsed && <span>Logout</span>}
-          </NavLink>
+          </button>
         </OverlayTrigger>
       </div>
     </aside>
