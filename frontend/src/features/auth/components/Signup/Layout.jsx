@@ -9,8 +9,44 @@ const SignupLayout = ({
   success,
   isLoading,
   handleChange,
-  handleSubmit
+  handleSubmit,
+  passwordStrength,
+  emailError
 }) => {
+
+  // Password requirements check
+  const passwordChecks = {
+    length: formData.password.length >= 8,
+    uppercase: /[A-Z]/.test(formData.password),
+    lowercase: /[a-z]/.test(formData.password),
+    number: /[0-9]/.test(formData.password),
+    special: /[!@#$%^&*]/.test(formData.password),
+  };
+
+  const renderPasswordStrength = () => {
+    if (!formData.password) return null;
+    
+    return (
+      <div className="password-requirements">
+        <div className={`requirement ${passwordChecks.length ? 'met' : ''}`}>
+          ✓ At least 8 characters
+        </div>
+        <div className={`requirement ${passwordChecks.uppercase ? 'met' : ''}`}>
+          ✓ One uppercase letter
+        </div>
+        <div className={`requirement ${passwordChecks.lowercase ? 'met' : ''}`}>
+          ✓ One lowercase letter
+        </div>
+        <div className={`requirement ${passwordChecks.number ? 'met' : ''}`}>
+          ✓ One number
+        </div>
+        <div className={`requirement ${passwordChecks.special ? 'met' : ''}`}>
+          ✓ One special character (!@#$%^&*)
+        </div>
+      </div>
+    );
+  };
+
   return (
     <Container>
       <Row className="justify-content-center align-items-center min-vh-100">
@@ -72,6 +108,25 @@ const SignupLayout = ({
                     value={formData.email}
                     onChange={handleChange}
                     required
+                    className={`signup-form-control ${emailError ? 'is-invalid' : ''}`}
+                  />
+                  {emailError && (
+                    <div className="invalid-feedback">
+                      {emailError}
+                    </div>
+                  )}
+                </Form.Group>
+
+                <Form.Group className="signup-form-group">
+                  <Form.Label className="signup-form-label">
+                    Phone Number
+                  </Form.Label>
+                  <Form.Control
+                    type="tel"
+                    name="phoneNumber"
+                    value={formData.phoneNumber}
+                    onChange={handleChange}
+                    placeholder="e.g., (555) 123-4567"
                     className="signup-form-control"
                   />
                 </Form.Group>
@@ -89,6 +144,7 @@ const SignupLayout = ({
                     required
                     className="signup-form-control"
                   />
+                  {renderPasswordStrength()}
                 </Form.Group>
 
                 <Form.Group className="signup-form-group">
@@ -109,7 +165,7 @@ const SignupLayout = ({
                 <Button
                   variant="primary"
                   type="submit"
-                  disabled={isLoading}
+                  disabled={isLoading || !Object.values(passwordChecks).every(Boolean)}
                   className="signup-submit-btn"
                 >
                   {isLoading ? 'Creating Account...' : 'Sign Up'}

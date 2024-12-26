@@ -11,6 +11,14 @@
 .signup-card {
   width: 100%;
   max-width: 420px;
+  padding: 2rem;
+  border: none;
+  transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+}
+
+.signup-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1) !important;
 }
 
 .signup-card .card-body {
@@ -42,18 +50,37 @@
   background: var(--bg-secondary);
   border: 1px solid var(--border-color);
   color: var(--text-primary);
+  padding: 0.75rem;
+  border-radius: 8px;
+  border: 1px solid #dee2e6;
+  transition: all 0.2s ease-in-out;
+}
+
+.signup-form-control:hover {
+  border-color: #0d6efd;
 }
 
 .signup-form-control:focus {
-  background: var(--bg-secondary);
-  border-color: var(--link-color);
-  box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25);
+  box-shadow: 0 0 0 0.2rem rgba(13, 110, 253, 0.25);
+  border-color: #0d6efd;
 }
 
 .signup-submit-btn {
   width: 100%;
   padding: 0.75rem;
-  font-weight: 500;
+  font-weight: 600;
+  border-radius: 8px;
+  transition: all 0.2s ease-in-out;
+}
+
+.signup-submit-btn:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 8px rgba(13, 110, 253, 0.2);
+}
+
+.signup-submit-btn:disabled {
+  cursor: not-allowed;
+  opacity: 0.7;
 }
 
 .signup-login-text {
@@ -66,6 +93,13 @@
 .signup-login-link {
   text-decoration: none;
   font-weight: 500;
+  color: #0d6efd;
+  transition: all 0.2s ease-in-out;
+}
+
+.signup-login-link:hover {
+  color: #0a58ca;
+  text-decoration: underline;
 }
 
 .signup-name-group {
@@ -75,4 +109,63 @@
 .signup-required {
   color: var(--danger);
   margin-left: 0.25rem;
+}
+
+/* Prevent text selection */
+* {
+  user-select: none;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  cursor: default;
+}
+
+/* Allow text selection in form inputs */
+input, textarea {
+  user-select: text !important;
+  -webkit-user-select: text !important;
+  -moz-user-select: text !important;
+  -ms-user-select: text !important;
+  cursor: text !important;
+}
+
+/* Allow pointer cursor on clickable elements */
+button, a, [role="button"] {
+  cursor: pointer !important;
+}
+
+/* Password Requirements */
+.password-requirements {
+  margin-top: 0.5rem;
+  padding: 0.5rem;
+  border-radius: 6px;
+  background-color: #f8f9fa;
+  transition: all 0.2s ease-in-out;
+}
+
+.password-requirements:hover {
+  background-color: #e9ecef;
+}
+
+.requirement {
+  font-size: 0.875rem;
+  color: #dc3545;
+  margin-top: 0.25rem;
+  transition: color 0.2s ease-in-out;
+}
+
+.requirement.met {
+  color: #198754;
+}
+
+.requirement::before {
+  content: "×";
+  margin-right: 0.5rem;
+  font-size: 1rem;
+  color: #dc3545;
+}
+
+.requirement.met::before {
+  content: "✓";
+  color: #27ae60;
 } 
