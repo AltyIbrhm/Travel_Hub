@@ -1,0 +1,78 @@
+/* Signup Component Styles */
+.signup-wrapper {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem;
+  background: var(--bg-primary);
+}
+
+.signup-card {
+  width: 100%;
+  max-width: 420px;
+}
+
+.signup-card .card-body {
+  padding: 2rem;
+}
+
+.signup-title {
+  font-weight: 600;
+  margin-bottom: 0.5rem;
+  color: var(--text-primary);
+}
+
+.signup-subtitle {
+  color: var(--text-secondary);
+  margin-bottom: 1.5rem;
+}
+
+.signup-form-group {
+  margin-bottom: 1.5rem;
+}
+
+.signup-form-label {
+  font-weight: 500;
+  margin-bottom: 0.5rem;
+  color: var(--text-primary);
+}
+
+.signup-form-control {
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  color: var(--text-primary);
+}
+
+.signup-form-control:focus {
+  background: var(--bg-secondary);
+  border-color: var(--link-color);
+  box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25);
+}
+
+.signup-submit-btn {
+  width: 100%;
+  padding: 0.75rem;
+  font-weight: 500;
+}
+
+.signup-login-text {
+  text-align: center;
+  margin-top: 1.5rem;
+  margin-bottom: 0;
+  color: var(--text-secondary);
+}
+
+.signup-login-link {
+  text-decoration: none;
+  font-weight: 500;
+}
+
+.signup-name-group {
+  margin-bottom: 1.5rem;
+}
+
+.signup-required {
+  color: var(--danger);
+  margin-left: 0.25rem;
+} 

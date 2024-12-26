@@ -1,0 +1,621 @@
+/* Base styles */
+.reservation-table {
+  font-size: 0.9rem;
+  margin-bottom: 0 !important;
+  color: var(--text-primary);
+  background-color: var(--bg-secondary);
+  border-color: var(--border-color);
+}
+
+.reservation-table th {
+  background-color: var(--bg-accent);
+  color: var(--text-primary);
+  font-weight: 600;
+  padding: 1.25rem 1rem;
+  white-space: nowrap;
+  border-bottom: 1px solid var(--border-color);
+  text-transform: uppercase;
+  font-size: 0.8rem;
+  letter-spacing: 0.5px;
+}
+
+.reservation-table td {
+  padding: 1.25rem 1rem;
+  vertical-align: middle;
+  color: var(--text-primary);
+  background-color: var(--bg-secondary);
+  border-color: var(--border-color);
+  font-size: 0.9rem;
+}
+
+.reservation-table tbody tr:hover td {
+  background-color: var(--bg-accent);
+  transition: background-color 0.2s ease;
+}
+
+/* Dark theme table overrides */
+[data-theme='dark'] .reservation-table {
+  color: var(--text-primary);
+  background-color: var(--bg-secondary);
+  border-color: var(--border-color);
+}
+
+[data-theme='dark'] .reservation-table th {
+  background-color: var(--bg-accent);
+  color: var(--text-primary);
+  border-color: var(--border-color);
+}
+
+[data-theme='dark'] .reservation-table td {
+  color: var(--text-primary);
+  background-color: var(--bg-secondary);
+  border-color: var(--border-color);
+}
+
+[data-theme='dark'] .reservation-table tbody tr:hover td {
+  background-color: var(--bg-accent);
+}
+
+[data-theme='dark'] .table-responsive {
+  background-color: var(--bg-secondary);
+  border-color: var(--border-color);
+}
+
+[data-theme='dark'] .table {
+  color: var(--text-primary);
+  border-color: var(--border-color);
+}
+
+[data-theme='dark'] .table>:not(caption)>*>* {
+  border-color: var(--border-color);
+  color: var(--text-primary);
+  background-color: var(--bg-secondary);
+}
+
+/* Status badges */
+.status-badge {
+  display: inline-block;
+  padding: 0.4em 0.8em;
+  font-size: 0.75em;
+  font-weight: 600;
+  line-height: 1;
+  text-align: center;
+  white-space: nowrap;
+  vertical-align: baseline;
+  border-radius: 2rem;
+  text-transform: capitalize;
+  transition: all 0.2s ease;
+}
+
+.status-pending {
+  background-color: #fff3cd;
+  color: #856404;
+}
+
+.status-completed {
+  background-color: #d4edda;
+  color: #155724;
+}
+
+.status-cancelled {
+  background-color: #f8d7da;
+  color: #721c24;
+}
+
+/* Filter select styles */
+.status-filter-select {
+  min-width: 200px;
+  border: 1px solid var(--border-color);
+  background-color: var(--bg-secondary);
+  color: var(--text-primary);
+  font-size: 0.9rem;
+  padding: 0.6rem 2rem 0.6rem 1rem;
+  border-radius: 0.5rem;
+  appearance: none;
+  background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
+  background-repeat: no-repeat;
+  background-position: right 0.75rem center;
+  background-size: 1em;
+  transition: all 0.2s ease;
+}
+
+.status-filter-select:focus {
+  border-color: var(--primary);
+  box-shadow: 0 0 0 0.2rem rgba(var(--primary-rgb), 0.15);
+  outline: none;
+}
+
+.status-filter-select:hover {
+  border-color: var(--primary);
+}
+
+.status-filter-select option {
+  background-color: var(--bg-primary);
+  color: var(--text-primary);
+  padding: 8px;
+}
+
+/* Card styles */
+.card {
+  background-color: var(--bg-secondary);
+  border-color: var(--border-color);
+  border-radius: 0.75rem;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+  transition: box-shadow 0.2s ease;
+}
+
+.card:hover {
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.07);
+}
+
+.card-header {
+  background-color: var(--bg-secondary);
+  border-bottom-color: var(--border-color);
+  color: var(--text-primary);
+}
+
+.card-body {
+  background-color: var(--bg-secondary);
+  color: var(--text-primary);
+}
+
+/* Modal styles */
+.modal-content {
+  background-color: var(--bg-secondary);
+  border-color: var(--border-color);
+  color: var(--text-primary);
+  position: relative;
+}
+
+.modal-header {
+  border-bottom-color: var(--border-color);
+}
+
+.modal-footer {
+  border-top-color: var(--border-color);
+}
+
+.booking-details {
+  background-color: var(--bg-accent);
+  padding: 1rem;
+  border-radius: 0.25rem;
+  font-size: 0.9rem;
+  color: var(--text-primary);
+}
+
+.booking-details > div {
+  margin-bottom: 0.5rem;
+}
+
+.booking-details > div:last-child {
+  margin-bottom: 0;
+}
+
+/* Table responsive wrapper */
+.table-responsive {
+  border: 1px solid var(--border-color);
+  border-radius: 0.75rem;
+  background-color: var(--bg-secondary);
+  overflow: hidden;
+}
+
+/* Alert styles */
+.alert {
+  position: fixed;
+  top: 1rem;
+  right: 1rem;
+  z-index: 1050;
+  min-width: 300px;
+  box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+  animation: slideIn 0.3s ease-out;
+  border-radius: 0.5rem;
+  padding: 1rem 1.25rem;
+}
+
+.alert-success {
+  background-color: rgba(40, 167, 69, 0.1);
+  border-color: rgba(40, 167, 69, 0.2);
+  color: #28a745;
+}
+
+@keyframes slideIn {
+  from {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+/* Dark theme overrides */
+[data-theme='dark'] .status-pending {
+  background-color: rgba(255, 243, 205, 0.15);
+  color: #ffd970;
+}
+
+[data-theme='dark'] .status-completed {
+  background-color: rgba(212, 237, 218, 0.15);
+  color: #28a745;
+}
+
+[data-theme='dark'] .status-cancelled {
+  background-color: rgba(248, 215, 218, 0.15);
+  color: #dc3545;
+}
+
+[data-theme='dark'] .alert-success {
+  background-color: rgba(40, 167, 69, 0.2);
+  border-color: rgba(40, 167, 69, 0.3);
+  color: #28a745;
+}
+
+/* Override Bootstrap table borders */
+.table>:not(caption)>*>* {
+  border-bottom-width: 1px;
+  border-bottom-color: var(--border-color);
+  background-color: var(--bg-secondary);
+}
+
+.table {
+  border-color: var(--border-color);
+  margin-bottom: 0;
+  color: var(--text-primary);
+}
+
+/* Additional Bootstrap overrides for dark theme */
+.table>tbody {
+  background-color: var(--bg-secondary);
+  color: var(--text-primary);
+}
+
+.table>thead {
+  background-color: var(--bg-accent);
+  color: var(--text-primary);
+}
+
+.table-hover>tbody>tr:hover>* {
+  background-color: var(--bg-accent);
+  color: var(--text-primary);
+}
+
+/* Page heading styles */
+.page-heading {
+  color: var(--text-primary);
+  margin: 0;
+  font-weight: 700;
+  font-size: 1.75rem;
+}
+
+/* Form group position relative for suggestions dropdown */
+.form-group {
+  position: relative !important;
+  margin-bottom: 1rem;
+}
+
+/* Location suggestions dropdown */
+.suggestions-dropdown {
+  position: absolute !important;
+  top: 100% !important;
+  left: 0 !important;
+  right: 0 !important;
+  background-color: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  border-radius: 0.25rem;
+  margin-top: 2px;
+  z-index: 9999;
+  max-height: 200px;
+  overflow-y: auto;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.suggestion-item {
+  padding: 0.75rem 1rem;
+  cursor: pointer;
+  color: var(--text-primary);
+  transition: background-color 0.2s ease;
+}
+
+.suggestion-item:hover {
+  background-color: var(--bg-accent);
+}
+
+/* Dark theme overrides for suggestions */
+[data-theme='dark'] .suggestions-dropdown {
+  background-color: var(--bg-secondary);
+  border-color: var(--border-color);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+[data-theme='dark'] .suggestion-item {
+  color: var(--text-primary);
+  border-bottom: 1px solid var(--border-color);
+}
+
+[data-theme='dark'] .suggestion-item:last-child {
+  border-bottom: none;
+}
+
+[data-theme='dark'] .suggestion-item:hover {
+  background-color: var(--bg-accent);
+}
+
+/* Modal body needs visible overflow for suggestions */
+.modal-body {
+  overflow: visible !important;
+}
+
+/* Modal content needs visible overflow for suggestions */
+.modal-content {
+  overflow: visible !important;
+}
+
+/* Form control wrapper */
+.form-control-wrapper {
+  position: relative !important;
+}
+
+/* Updated cost styles */
+.updated-cost {
+  margin-top: 0.5rem;
+  padding-top: 0.5rem;
+  border-top: 1px solid var(--border-color);
+}
+
+.updated-cost .text-success {
+  color: #28a745 !important;
+}
+
+.updated-cost .text-danger {
+  color: #dc3545 !important;
+}
+
+[data-theme='dark'] .updated-cost .text-success {
+  color: #2ecc71 !important;
+}
+
+[data-theme='dark'] .updated-cost .text-danger {
+  color: #e74c3c !important;
+}
+
+/* Action buttons */
+.btn-outline-warning, .btn-outline-danger {
+  padding: 0.4rem 1rem;
+  font-size: 0.85rem;
+  border-radius: 0.5rem;
+  transition: all 0.2s ease;
+}
+
+.btn-outline-warning:hover {
+  background-color: #ffc107;
+  color: #000;
+}
+
+.btn-outline-danger:hover {
+  background-color: #dc3545;
+  color: #fff;
+}
+
+/* New Reservation button */
+.btn-primary {
+  padding: 0.6rem 1.25rem;
+  font-weight: 500;
+  border-radius: 0.5rem;
+  transition: all 0.2s ease;
+  box-shadow: 0 2px 4px rgba(var(--primary-rgb), 0.15);
+}
+
+.btn-primary:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 6px rgba(var(--primary-rgb), 0.2);
+}
+
+/* Empty state styles */
+.text-center.py-4 {
+  color: var(--text-secondary);
+  font-size: 0.95rem;
+  padding: 2rem !important;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .page-heading {
+    font-size: 1.5rem;
+  }
+  
+  .d-flex.gap-3 {
+    flex-direction: column;
+    gap: 0.75rem !important;
+  }
+  
+  .status-filter-select {
+    width: 100%;
+  }
+  
+  .btn-primary {
+    width: 100%;
+  }
+}
+
+.reservations-container {
+  padding: 2rem;
+  margin-left: 280px; /* Account for sidebar width */
+}
+
+.page-title {
+  font-size: 1.75rem;
+  font-weight: 600;
+  color: #2c3e50;
+  margin-bottom: 0;
+}
+
+.search-input {
+  border-radius: 0.5rem;
+  padding: 0.75rem 1rem;
+  border: 1px solid #dee2e6;
+}
+
+.reservation-card {
+  border: none;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  border-radius: 0.5rem;
+  transition: transform 0.2s;
+}
+
+.reservation-card:hover {
+  transform: translateY(-2px);
+}
+
+.trip-route {
+  position: relative;
+  padding: 0.5rem 0;
+}
+
+.route-line {
+  position: absolute;
+  left: 0.5rem;
+  top: 2rem;
+  bottom: 2rem;
+  width: 2px;
+  background-color: #dee2e6;
+}
+
+.trip-details {
+  color: #6c757d;
+  font-size: 0.9rem;
+}
+
+.driver-photo {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.driver-name {
+  font-weight: 500;
+  font-size: 0.9rem;
+}
+
+.driver-rating {
+  color: #6c757d;
+  font-size: 0.875rem;
+}
+
+.driver-info {
+  padding: 0.5rem;
+}
+
+/* Tab Styles */
+.nav-tabs {
+  border-bottom: 2px solid #dee2e6;
+  margin-bottom: 1.5rem;
+}
+
+.nav-tabs .nav-link {
+  border: none;
+  color: #6c757d;
+  padding: 0.75rem 1rem;
+  font-weight: 500;
+  position: relative;
+}
+
+.nav-tabs .nav-link:hover {
+  border: none;
+  color: #0d6efd;
+}
+
+.nav-tabs .nav-link.active {
+  border: none;
+  color: #0d6efd;
+}
+
+.nav-tabs .nav-link.active::after {
+  content: '';
+  position: absolute;
+  bottom: -2px;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background-color: #0d6efd;
+}
+
+/* Badge Styles */
+.badge {
+  padding: 0.5rem 0.75rem;
+  font-weight: 500;
+  text-transform: capitalize;
+}
+
+.badge.bg-success {
+  background-color: #28a745 !important;
+}
+
+.badge.bg-warning {
+  background-color: #ffc107 !important;
+  color: #000;
+}
+
+.badge.bg-info {
+  background-color: #17a2b8 !important;
+}
+
+.badge.bg-danger {
+  background-color: #dc3545 !important;
+}
+
+/* Button Styles */
+.btn-outline-primary {
+  border-color: #dee2e6;
+}
+
+.btn-outline-primary:hover {
+  background-color: #f8f9fa;
+  border-color: #0d6efd;
+}
+
+.btn-outline-danger {
+  border-color: #dee2e6;
+}
+
+.btn-outline-danger:hover {
+  background-color: #fff5f5;
+  border-color: #dc3545;
+}
+
+/* Dark theme support */
+[data-theme='dark'] .reservations-container {
+  background-color: #1a1d21;
+}
+
+[data-theme='dark'] .page-title {
+  color: #e9ecef;
+}
+
+[data-theme='dark'] .reservation-card {
+  background-color: #2d3238;
+  border-color: #2d3238;
+}
+
+[data-theme='dark'] .trip-details,
+[data-theme='dark'] .driver-rating {
+  color: #adb5bd;
+}
+
+[data-theme='dark'] .route-line {
+  background-color: #495057;
+}
+
+[data-theme='dark'] .nav-tabs {
+  border-bottom-color: #2d3238;
+}
+
+[data-theme='dark'] .nav-tabs .nav-link {
+  color: #adb5bd;
+}
+
+[data-theme='dark'] .nav-tabs .nav-link:hover,
+[data-theme='dark'] .nav-tabs .nav-link.active {
+  color: #0d6efd;
+} 

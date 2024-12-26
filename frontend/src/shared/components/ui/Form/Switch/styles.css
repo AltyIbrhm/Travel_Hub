@@ -1,0 +1,46 @@
+.custom-switch {
+  margin-bottom: 1rem;
+}
+
+.custom-switch .switch-input {
+  margin-top: 0.25rem;
+}
+
+.custom-switch .form-switch .form-check-input {
+  background-color: var(--bg-secondary);
+  border-color: var(--border-color);
+  cursor: pointer;
+}
+
+.custom-switch .form-switch .form-check-input:checked {
+  background-color: var(--primary-color);
+  border-color: var(--primary-color);
+}
+
+.custom-switch .form-switch .form-check-input:focus {
+  border-color: var(--primary-color);
+  box-shadow: 0 0 0 0.2rem rgba(var(--primary-rgb), 0.25);
+}
+
+.custom-switch .switch-label {
+  color: var(--text-primary);
+  font-weight: 500;
+  cursor: pointer;
+}
+
+.custom-switch .switch-description {
+  color: var(--text-secondary);
+  font-size: 0.875rem;
+  margin-top: 0.25rem;
+}
+
+.custom-switch .form-switch .form-check-input:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.custom-switch .form-switch .form-check-input:disabled ~ .switch-label,
+.custom-switch .form-switch .form-check-input:disabled ~ .switch-description {
+  opacity: 0.5;
+  cursor: not-allowed;
+} 

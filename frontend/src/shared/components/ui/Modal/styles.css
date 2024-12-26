@@ -1,0 +1,66 @@
+.custom-modal .modal-content {
+  background-color: var(--bg-primary);
+  border-color: var(--border-color);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.custom-modal .modal-header {
+  background-color: var(--bg-primary);
+  border-bottom-color: var(--border-color);
+  padding: 1rem 1.5rem;
+}
+
+.custom-modal .modal-title {
+  color: var(--text-primary);
+  font-size: 1.25rem;
+  font-weight: 600;
+}
+
+.custom-modal .modal-body {
+  padding: 1.5rem;
+  color: var(--text-primary);
+}
+
+.custom-modal .modal-footer {
+  background-color: var(--bg-primary);
+  border-top-color: var(--border-color);
+  padding: 1rem 1.5rem;
+}
+
+.custom-modal .btn-close {
+  color: var(--text-primary);
+  opacity: 0.75;
+  transition: opacity 0.2s ease-in-out;
+}
+
+.custom-modal .btn-close:hover {
+  opacity: 1;
+}
+
+/* Dark mode adjustments */
+[data-theme="dark"] .custom-modal .btn-close {
+  filter: invert(1) grayscale(100%) brightness(200%);
+}
+
+/* Animation */
+.custom-modal.fade .modal-dialog {
+  transform: scale(0.95);
+  transition: transform 0.2s ease-out;
+}
+
+.custom-modal.show .modal-dialog {
+  transform: none;
+}
+
+/* Responsive adjustments */
+@media (max-width: 576px) {
+  .custom-modal .modal-dialog {
+    margin: 1rem;
+  }
+
+  .custom-modal .modal-header,
+  .custom-modal .modal-body,
+  .custom-modal .modal-footer {
+    padding: 1rem;
+  }
+} 

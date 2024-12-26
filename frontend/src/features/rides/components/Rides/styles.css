@@ -1,0 +1,174 @@
+.rides-container {
+  padding: 2rem;
+}
+
+.page-title {
+  font-size: 1.75rem;
+  font-weight: 600;
+  color: #2c3e50;
+  margin-bottom: 0;
+}
+
+.search-input {
+  border-radius: 0.5rem;
+  padding: 0.75rem 1rem;
+  border: 1px solid #dee2e6;
+}
+
+.ride-card {
+  border: none;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  border-radius: 0.5rem;
+  transition: transform 0.2s;
+}
+
+.ride-card:hover {
+  transform: translateY(-2px);
+}
+
+.trip-route {
+  position: relative;
+  padding: 0.5rem 0;
+}
+
+.route-line {
+  position: absolute;
+  left: 0.5rem;
+  top: 2rem;
+  bottom: 2rem;
+  width: 2px;
+  background-color: #dee2e6;
+}
+
+.ride-details {
+  color: #6c757d;
+  font-size: 0.9rem;
+}
+
+.driver-photo {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.driver-name {
+  font-weight: 500;
+  font-size: 0.9rem;
+}
+
+.driver-rating {
+  color: #6c757d;
+  font-size: 0.875rem;
+}
+
+.driver-info {
+  padding: 0.5rem;
+}
+
+/* Ride Details Modal */
+.ride-details-header {
+  text-align: center;
+}
+
+.map-placeholder {
+  height: 200px;
+  background-color: #f8f9fa;
+  border-radius: 0.5rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  color: #adb5bd;
+}
+
+.map-placeholder i {
+  font-size: 2rem;
+  margin-bottom: 0.5rem;
+}
+
+.info-item {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 0.75rem;
+  font-size: 0.9rem;
+}
+
+.info-item .label {
+  color: #6c757d;
+  font-weight: 500;
+}
+
+.info-item .value {
+  color: #2c3e50;
+}
+
+.ride-review {
+  border-top: 1px solid #dee2e6;
+  padding-top: 1rem;
+  margin-top: 1rem;
+}
+
+.stars {
+  font-size: 1.25rem;
+}
+
+.review-text {
+  color: #6c757d;
+  font-size: 0.9rem;
+  font-style: italic;
+  margin: 0;
+}
+
+/* Dark theme support */
+[data-theme='dark'] .rides-container {
+  background-color: #1a1d21;
+}
+
+[data-theme='dark'] .page-title {
+  color: #e9ecef;
+}
+
+[data-theme='dark'] .ride-card {
+  background-color: #2d3238;
+  border-color: #2d3238;
+}
+
+[data-theme='dark'] .ride-details,
+[data-theme='dark'] .driver-rating {
+  color: #adb5bd;
+}
+
+[data-theme='dark'] .route-line {
+  background-color: #495057;
+}
+
+[data-theme='dark'] .map-placeholder {
+  background-color: #2d3238;
+  color: #6c757d;
+}
+
+[data-theme='dark'] .info-item .label {
+  color: #adb5bd;
+}
+
+[data-theme='dark'] .info-item .value {
+  color: #e9ecef;
+}
+
+[data-theme='dark'] .modal-content {
+  background-color: #2d3238;
+  border-color: #495057;
+}
+
+[data-theme='dark'] .modal-header {
+  border-bottom-color: #495057;
+}
+
+[data-theme='dark'] .modal-header .close {
+  color: #e9ecef;
+}
+
+[data-theme='dark'] .review-text {
+  color: #adb5bd;
+} 
