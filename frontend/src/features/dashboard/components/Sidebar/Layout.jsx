@@ -1,13 +1,15 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { Nav, Image, Badge, OverlayTrigger, Tooltip } from 'react-bootstrap';
 import { NavLink, useLocation, useNavigate } from 'react-router-dom';
+import { useSidebar } from '../../context/SidebarContext';
 import './styles.css';
 
-const Sidebar = ({ isCollapsed = false, onToggle }) => {
+const Sidebar = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const [showUserMenu, setShowUserMenu] = useState(false);
-  
+  const { isCollapsed, toggleSidebar } = useSidebar();
+
   // Get user data with validation
   const getUserData = () => {
     try {
@@ -18,7 +20,6 @@ const Sidebar = ({ isCollapsed = false, onToggle }) => {
       }
       return JSON.parse(userData);
     } catch (error) {
-      console.error('Error parsing user data:', error);
       navigate('/login');
       return null;
     }
@@ -97,6 +98,13 @@ const Sidebar = ({ isCollapsed = false, onToggle }) => {
           <i className="bi bi-car-front text-primary"></i>
           {!isCollapsed && <span>TravelHub</span>}
         </NavLink>
+        <button 
+          className="sidebar-toggle"
+          onClick={toggleSidebar}
+          aria-label={isCollapsed ? 'Expand Sidebar' : 'Collapse Sidebar'}
+        >
+          <i className={`bi ${isCollapsed ? 'bi-chevron-right' : 'bi-chevron-left'}`}></i>
+        </button>
       </div>
 
       <div className="sidebar-user">
@@ -120,7 +128,7 @@ const Sidebar = ({ isCollapsed = false, onToggle }) => {
         )}
       </div>
 
-      <div className="quick-actions">
+      <div className="quick-actions-group">
         {quickActions.map((action, index) => (
           <OverlayTrigger
             key={index}
@@ -128,7 +136,7 @@ const Sidebar = ({ isCollapsed = false, onToggle }) => {
             overlay={isCollapsed ? <Tooltip>{action.label}</Tooltip> : <></>}
           >
             <button
-              className="quick-action-button"
+              className="quick-action-icon"
               onClick={action.action}
               aria-label={action.label}
             >

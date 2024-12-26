@@ -1,9 +1,9 @@
-import React, { useState, useEffect, useRef, useCallback } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Container, Row, Col, Card, Form, Button } from 'react-bootstrap';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
-import Profile from './components/Profile/Layout';
 import Sidebar from '../Sidebar';
+import { SidebarProvider, useSidebar } from '../../context/SidebarContext';
 import L from 'leaflet';
 import 'react-toastify/dist/ReactToastify.css';
 import 'leaflet/dist/leaflet.css';
@@ -20,13 +20,12 @@ L.Icon.Default.mergeOptions({
   shadowUrl: require('leaflet/dist/images/marker-shadow.png'),
 });
 
-const Dashboard = () => {
+const DashboardContent = () => {
   const navigate = useNavigate();
   const mapRef = useRef(null);
   const [mapInstance, setMapInstance] = useState(null);
-  const [showProfile, setShowProfile] = useState(false);
-  const [isCollapsed, setIsCollapsed] = useState(false);
   const [user, setUser] = useState(null);
+  const { isCollapsed } = useSidebar();
   const [bookingData, setBookingData] = useState({
     pickupLocation: '',
     destination: '',
@@ -48,10 +47,6 @@ const Dashboard = () => {
 
     fetchUserData();
   }, [navigate]);
-
-  const handleToggle = () => {
-    setIsCollapsed(prev => !prev);
-  };
 
   useEffect(() => {
     let map = null;
@@ -149,7 +144,6 @@ const Dashboard = () => {
 
   const handleBookingSubmit = (e) => {
     e.preventDefault();
-    console.log('Booking data:', bookingData);
     toast.success('Booking request submitted!');
   };
 
@@ -202,41 +196,31 @@ const Dashboard = () => {
   ];
 
   return (
-    <div className="dashboard-wrapper">
-      <Sidebar 
-        isCollapsed={isCollapsed} 
-        onToggle={handleToggle} 
-      />
+    <div className={`dashboard-wrapper ${isCollapsed ? 'sidebar-collapsed' : ''}`}>
+      <Sidebar />
       <main className={`dashboard-content ${isCollapsed ? 'sidebar-collapsed' : ''}`}>
         <Container fluid>
           {/* Header Section */}
-          <Row className="header-row align-items-center mb-4">
-            <Col className="d-flex align-items-center">
-              <button 
-                className="sidebar-toggle me-3"
-                onClick={handleToggle}
-                aria-label="Toggle Sidebar"
-              >
-                <i className="bi bi-list"></i>
-              </button>
-              <h1 className="dashboard-title mb-0">Welcome back, {user?.firstName}!</h1>
+          <Row className="align-items-center mb-3">
+            <Col>
+              <h1 className="dashboard-title h4 mb-0">Welcome back, {user?.firstName}!</h1>
             </Col>
           </Row>
 
           {/* Stats Section */}
-          <Row className="mb-4">
+          <Row className="g-2 mb-3">
             {stats.map((stat, index) => (
-              <Col key={index} xs={12} sm={6} lg={3} className="mb-3">
-                <Card className="stats-card h-100">
-                  <Card.Body>
+              <Col key={index} xs={12} sm={6} lg={3}>
+                <Card className="stats-card border-0 shadow-sm">
+                  <Card.Body className="p-2">
                     <div className="d-flex align-items-center">
-                      <div className="icon-wrapper">
+                      <div className="icon-wrapper d-flex align-items-center justify-content-center me-2">
                         <i className={`bi ${stat.icon}`}></i>
                       </div>
-                      <div className="ms-3">
-                        <h6 className="stats-title">{stat.title}</h6>
-                        <h3 className="stats-value">{stat.value}</h3>
-                        <span className={`stats-change ${stat.positive ? 'positive' : 'negative'}`}>
+                      <div>
+                        <h6 className="text-muted text-uppercase small mb-1">{stat.title}</h6>
+                        <h3 className="fw-bold mb-1">{stat.value}</h3>
+                        <span className={`stats-change ${stat.positive ? 'positive' : 'negative'} small`}>
                           <i className={`bi bi-arrow-${stat.positive ? 'up' : 'down'}`}></i>
                           {stat.change}
                         </span>
@@ -249,16 +233,17 @@ const Dashboard = () => {
           </Row>
 
           {/* Map and Booking Section */}
-          <Row className="mb-4">
-            <Col lg={8} className="mb-3">
-              <Card className="h-100">
-                <Card.Body>
-                  <h5 className="card-title mb-3">Book Your Ride</h5>
-                  <div className="map-container" ref={mapRef}>
+          <Row className="g-3">
+            <Col lg={8}>
+              <Card className="border-0 shadow-sm">
+                <Card.Body className="p-3">
+                  <h5 className="fw-bold mb-3">Book Your Ride</h5>
+                  <div className="map-container rounded">
                     <div className="map-helper-text">
                       <i className="bi bi-info-circle me-2"></i>
                       Click on map to set pickup and destination locations
                     </div>
+                    <div ref={mapRef} style={{ height: '100%' }}></div>
                   </div>
                   <Form className="mt-4" onSubmit={handleBookingSubmit}>
                     <Row>
@@ -370,11 +355,11 @@ const Dashboard = () => {
               </Card>
 
               {/* Recent Bookings Card */}
-              <Card className="h-100">
+              <Card>
                 <Card.Header>
                   <h5 className="mb-0">Recent Bookings</h5>
                 </Card.Header>
-                <Card.Body>
+                <Card.Body className="p-0">
                   {recentBookings.map((booking) => (
                     <div key={booking.id} className="recent-booking-item">
                       <div className="d-flex justify-content-between align-items-center">
@@ -395,14 +380,17 @@ const Dashboard = () => {
               </Card>
             </Col>
           </Row>
-
-          {/* Profile Modal */}
-          {showProfile && (
-            <Profile onClose={() => setShowProfile(false)} />
-          )}
         </Container>
       </main>
     </div>
+  );
+};
+
+const Dashboard = () => {
+  return (
+    <SidebarProvider>
+      <DashboardContent />
+    </SidebarProvider>
   );
 };
 
