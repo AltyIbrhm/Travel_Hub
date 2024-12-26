@@ -14,6 +14,9 @@ import ResetPassword from './features/auth/components/ResetPassword';
 import Dashboard from './features/dashboard/components/Dashboard/Dashboard';
 import { SidebarProvider } from './features/dashboard/context/SidebarContext';
 
+// Profile Component
+import Profile from './features/profile/Profile';
+
 // Protected Route Component
 const ProtectedRoute = ({ children }) => {
   const token = localStorage.getItem('token');
@@ -41,6 +44,17 @@ function App() {
               <ProtectedRoute>
                 <SidebarProvider>
                   <Dashboard />
+                </SidebarProvider>
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/profile"
+            element={
+              <ProtectedRoute>
+                <SidebarProvider>
+                  <Profile />
                 </SidebarProvider>
               </ProtectedRoute>
             }

@@ -2,6 +2,9 @@ import React, { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import profileService from './services/profileService';
 import ProfileLayout from './ProfileLayout';
+import Sidebar from '../dashboard/components/Sidebar';
+import { useSidebar } from '../dashboard/context/SidebarContext';
+import './profile.css';
 
 const Profile = () => {
   const navigate = useNavigate();
@@ -19,9 +22,9 @@ const Profile = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const fileInputRef = useRef(null);
-  const [uploadProgress, setUploadProgress] = useState(0);
   const [imageKey, setImageKey] = useState(Date.now());
   const [isDeletingPhoto, setIsDeletingPhoto] = useState(false);
+  const { isCollapsed } = useSidebar();
 
   useEffect(() => {
     loadProfile();
@@ -93,23 +96,27 @@ const Profile = () => {
   };
 
   return (
-    <ProfileLayout
-      formData={formData}
-      previewImage={previewImage}
-      message={message}
-      isLoading={isLoading}
-      isEditing={isEditing}
-      setIsEditing={setIsEditing}
-      navigate={navigate}
-      handleDeletePicture={handleDeletePicture}
-      handleSubmit={handleSubmit}
-      handleFileChange={handleFileChange}
-      handleChange={handleChange}
-      fileInputRef={fileInputRef}
-      uploadProgress={uploadProgress}
-      imageKey={imageKey}
-      isDeletingPhoto={isDeletingPhoto}
-    />
+    <div className={`dashboard-wrapper ${isCollapsed ? 'sidebar-collapsed' : ''}`}>
+      <Sidebar />
+      <main className={`dashboard-content ${isCollapsed ? 'sidebar-collapsed' : ''}`}>
+        <ProfileLayout
+          formData={formData}
+          previewImage={previewImage}
+          message={message}
+          isLoading={isLoading}
+          isEditing={isEditing}
+          setIsEditing={setIsEditing}
+          navigate={navigate}
+          handleDeletePicture={handleDeletePicture}
+          handleSubmit={handleSubmit}
+          handleFileChange={handleFileChange}
+          handleChange={handleChange}
+          fileInputRef={fileInputRef}
+          imageKey={imageKey}
+          isDeletingPhoto={isDeletingPhoto}
+        />
+      </main>
+    </div>
   );
 };
 

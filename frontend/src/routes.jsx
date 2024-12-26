@@ -3,7 +3,7 @@ import { Routes, Route, Navigate } from 'react-router-dom';
 import Login from './features/auth/components/Login/Layout';
 import Register from './features/auth/components/Register/Layout';
 import Dashboard from './features/dashboard/components/Dashboard/Layout';
-import PrivateRoute from './components/PrivateRoute';
+import PrivateRoute from './features/auth/components/PrivateRoute';
 
 const AppRoutes = () => {
   return (

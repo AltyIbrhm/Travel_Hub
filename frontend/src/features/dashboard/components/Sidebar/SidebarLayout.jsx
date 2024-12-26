@@ -1,15 +1,13 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { Nav, Image, Badge, OverlayTrigger, Tooltip } from 'react-bootstrap';
-import { NavLink, useLocation, useNavigate } from 'react-router-dom';
+import { NavLink, useNavigate } from 'react-router-dom';
 import { useSidebar } from '../../context/SidebarContext';
 import { toast } from 'react-toastify';
 import authService from '../../../../features/auth/services/authService';
 import './sidebar.styles.css';
 
-const Sidebar = () => {
+const SidebarLayout = () => {
   const navigate = useNavigate();
-  const location = useLocation();
-  const [showUserMenu, setShowUserMenu] = useState(false);
   const { isCollapsed, toggleSidebar } = useSidebar();
 
   // Get user data with validation
@@ -206,4 +204,4 @@ const Sidebar = () => {
   );
 };
 
-export default Sidebar; 
+export default SidebarLayout; 

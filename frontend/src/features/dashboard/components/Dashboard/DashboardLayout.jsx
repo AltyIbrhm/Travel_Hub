@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { Container, Row, Col, Card, Form, Button } from 'react-bootstrap';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
-import Sidebar from '../Sidebar/Sidebar';
+import Sidebar from '../Sidebar';
 import { SidebarProvider, useSidebar } from '../../context/SidebarContext';
 import L from 'leaflet';
 import 'react-toastify/dist/ReactToastify.css';
