@@ -1,167 +1,121 @@
 /* Login Component Styles */
-.login-wrapper {
-  min-height: 100vh;
+.login-container {
   display: flex;
-  align-items: center;
   justify-content: center;
-  padding: 2rem;
-  background: var(--bg-primary);
+  align-items: center;
+  min-height: 100vh;
+  background-color: #ffffff;
+  padding: 20px;
 }
 
 .login-card {
   width: 100%;
-  max-width: 420px;
+  max-width: 450px;
+  border: none;
+  border-radius: 15px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
 }
 
-.login-card .card-body {
-  padding: 2rem;
+.login-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
 }
 
 .login-title {
+  color: #2c3e50;
+  font-size: 2rem;
   font-weight: 600;
   margin-bottom: 0.5rem;
-  color: var(--text-primary);
 }
 
 .login-subtitle {
-  color: var(--text-secondary);
-  margin-bottom: 1.5rem;
-}
-
-.login-form-group {
-  margin-bottom: 1.5rem;
-}
-
-.login-form-label {
-  font-weight: 500;
-  margin-bottom: 0.5rem;
-  color: var(--text-primary);
-}
-
-.login-form-control {
-  background: var(--bg-secondary);
-  border: 1px solid var(--border-color);
-  color: var(--text-primary);
-}
-
-.login-form-control:focus {
-  background: var(--bg-secondary);
-  border-color: var(--link-color);
-  box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25);
+  color: #6c757d;
+  font-size: 1rem;
 }
 
 .login-forgot-link {
-  font-size: 0.875rem;
+  color: #007bff;
   text-decoration: none;
+  font-size: 0.9rem;
+  transition: color 0.3s ease;
+}
+
+.login-forgot-link:hover {
+  color: #0056b3;
+  text-decoration: underline;
+}
+
+.login-remember-me {
+  user-select: none;
 }
 
 .login-submit-btn {
   width: 100%;
-  padding: 0.75rem;
+  padding: 12px;
+  font-size: 1rem;
   font-weight: 500;
+  margin-bottom: 1rem;
+  border-radius: 8px;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.login-submit-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
 }
 
 .login-signup-text {
   text-align: center;
-  margin-top: 1.5rem;
-  margin-bottom: 0;
-  color: var(--text-secondary);
+  color: #6c757d;
+  font-size: 0.9rem;
 }
 
 .login-signup-link {
+  color: #007bff;
   text-decoration: none;
   font-weight: 500;
+  transition: color 0.3s ease;
 }
 
-.login-remember-me {
-  color: var(--text-primary);
-}
-
-.login-container {
-  background-color: var(--bg-primary);
-  min-height: 100vh;
-}
-
-.login-card {
-  background: var(--bg-primary);
-  border: none;
-  border-radius: 10px;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-  padding: 1rem;
-}
-
-.login-card h2 {
-  color: var(--text-primary);
-  font-size: 1.75rem;
-  font-weight: 600;
-  margin-bottom: 0.5rem;
-}
-
-.login-card .text-muted {
-  font-size: 0.875rem;
-}
-
-.login-card .form-label {
-  color: var(--text-primary);
-  font-weight: 500;
-  margin-bottom: 0.5rem;
-}
-
-.login-card .form-control {
-  background-color: var(--bg-primary);
-  border: 1px solid var(--secondary);
-  color: var(--text-primary);
-  padding: 0.75rem 1rem;
-}
-
-.login-card .form-control:focus {
-  border-color: var(--primary);
-  box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
-}
-
-.login-card .btn-primary {
-  padding: 0.75rem;
-  font-weight: 500;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-}
-
-.login-card .form-check-label {
-  color: var(--text-primary);
-  font-size: 0.875rem;
-}
-
-.login-card a {
-  color: var(--primary);
-  text-decoration: none;
-  transition: color 0.2s ease;
-}
-
-.login-card a:hover {
+.login-signup-link:hover {
   color: #0056b3;
+  text-decoration: underline;
 }
 
-/* Dark theme adjustments */
-[data-theme='dark'] .login-card {
-  background: #2a2a2a;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+.form-control {
+  padding: 12px;
+  border-radius: 8px;
+  border: 1px solid #ced4da;
+  transition: border-color 0.3s ease, box-shadow 0.3s ease;
 }
 
-[data-theme='dark'] .login-card .form-control {
-  background-color: #1a1a1a;
-  border-color: #404040;
-  color: #ffffff;
-}
-
-[data-theme='dark'] .login-card .form-control:focus {
-  border-color: var(--primary);
+.form-control:focus {
+  border-color: #80bdff;
   box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
 }
 
-/* Loading state */
-.login-card .btn-primary:disabled {
-  background-color: var(--secondary);
-  border-color: var(--secondary);
-  cursor: not-allowed;
-  opacity: 0.8;
+.form-control:hover {
+  border-color: #80bdff;
+}
+
+.input-group .btn {
+  padding: 12px;
+  border-top-right-radius: 8px !important;
+  border-bottom-right-radius: 8px !important;
+}
+
+.alert {
+  border-radius: 8px;
+  font-size: 0.9rem;
+}
+
+.form-label {
+  font-weight: 500;
+  color: #2c3e50;
+}
+
+.form-check-label {
+  user-select: none;
+  color: #6c757d;
 } 
