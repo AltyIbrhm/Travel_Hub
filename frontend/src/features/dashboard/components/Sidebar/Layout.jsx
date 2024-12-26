@@ -160,7 +160,7 @@ const Sidebar = () => {
           </OverlayTrigger>
         ))}
       </div>
-
+      
       <Nav className="sidebar-nav">
         {navigationItems.map((section, index) => (
           <div key={index} className="nav-section">

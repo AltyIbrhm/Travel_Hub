@@ -1,26 +1,19 @@
 /* Dashboard Layout */
-.dashboard-wrapper {
+.dashboard-container {
   display: flex;
   min-height: 100vh;
-  background-color: #ffffff;
-  width: 100%;
-  overflow-x: hidden;
+  background-color: var(--bs-body-bg);
 }
 
 .dashboard-content {
   flex: 1;
-  padding: 0;
-  margin-left: 250px;
-  min-height: 100vh;
-  background-color: #ffffff;
-  transition: all 0.3s ease-in-out;
-  width: calc(100% - 250px);
-  overflow-x: hidden;
+  overflow-y: auto;
+  transition: margin-left 0.3s ease;
 }
 
-.dashboard-content.sidebar-collapsed {
-  margin-left: 50px;
-  width: calc(100% - 50px);
+/* When sidebar is collapsed */
+.sidebar-collapsed + .dashboard-content {
+  margin-left: 60px;
 }
 
 /* Container Overrides */
