@@ -11,7 +11,7 @@ import ForgotPassword from './features/auth/components/ForgotPassword';
 import ResetPassword from './features/auth/components/ResetPassword';
 
 // Main Components
-import Sidebar from './features/Sidebar';
+import Dashboard from './features/dashboard';
 import Profile from './features/profile';
 import { SidebarProvider } from './features/Sidebar/context/SidebarContext';
 
@@ -37,12 +37,10 @@ function App() {
           
           {/* Protected Routes */}
           <Route
-            path="/dashboard/*"
+            path="/dashboard"
             element={
               <ProtectedRoute>
-                <SidebarProvider>
-                  <Sidebar />
-                </SidebarProvider>
+                <Dashboard />
               </ProtectedRoute>
             }
           />

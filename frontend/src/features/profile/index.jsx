@@ -1,9 +1,10 @@
 import React from 'react';
 import Sidebar from '../Sidebar';
 import ProfileLayout from './ProfileLayout';
-import { SidebarProvider } from '../Sidebar/context/SidebarContext';
+import { SidebarProvider, useSidebar } from '../Sidebar/context/SidebarContext';
 
-const Profile = () => {
+const ProfileContainer = () => {
+  const { isCollapsed } = useSidebar();
   const user = JSON.parse(localStorage.getItem('user')) || {};
 
   const handleSave = (formData) => {
@@ -12,10 +13,18 @@ const Profile = () => {
   };
 
   return (
-    <div style={{ display: 'flex' }}>
+    <div className={`profile-container ${isCollapsed ? 'sidebar-collapsed' : ''}`}>
+      <ProfileLayout user={user} onSave={handleSave} />
+    </div>
+  );
+};
+
+const Profile = () => {
+  return (
+    <div className="layout-wrapper">
       <SidebarProvider>
         <Sidebar />
-        <ProfileLayout user={user} onSave={handleSave} />
+        <ProfileContainer />
       </SidebarProvider>
     </div>
   );
