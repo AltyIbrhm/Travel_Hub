@@ -1,210 +1,167 @@
 import React from 'react';
-import { Nav, Image, Badge, OverlayTrigger, Tooltip } from 'react-bootstrap';
-import { NavLink, useNavigate } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useSidebar } from './context/SidebarContext';
-import { toast } from 'react-toastify';
-import authService from '../../features/auth/services/authService';
+import '../../styles/components/_sidebar.css';
 
 const SidebarLayout = () => {
-  const navigate = useNavigate();
   const { isCollapsed, toggleSidebar } = useSidebar();
-
-  // Get user data with validation
-  const getUserData = () => {
-    try {
-      const userData = localStorage.getItem('user');
-      if (!userData) {
-        navigate('/login');
-        return null;
-      }
-      return JSON.parse(userData);
-    } catch (error) {
-      navigate('/login');
-      return null;
-    }
-  };
-
-  const user = getUserData();
-
-  // If no user data, don't render the sidebar
-  if (!user) {
-    return null;
-  }
+  const location = useLocation();
+  const navigate = useNavigate();
 
   const handleLogout = () => {
-    try {
-      authService.logout();
-      localStorage.removeItem('user');
-      toast.success('Logged out successfully');
-      navigate('/login');
-    } catch (error) {
-      console.error('Logout error:', error);
-      toast.error('Error logging out');
-    }
+    localStorage.removeItem('token');
+    localStorage.removeItem('user');
+    navigate('/login');
   };
 
-  const quickActions = [
-    { icon: 'bi-plus-circle', label: 'New Booking', action: () => navigate('/bookings/new') },
-    { icon: 'bi-clock-history', label: 'Recent Rides', action: () => navigate('/rides') },
-    { icon: 'bi-star', label: 'Favorites', action: () => navigate('/favorites') }
-  ];
-
-  const navigationItems = [
+  const mainMenuItems = [
     {
-      section: 'MAIN',
-      items: [
-        { 
-          path: '/dashboard', 
-          icon: 'bi-speedometer2', 
-          label: 'Dashboard',
-          badge: { text: 'New', variant: 'primary' }
-        }
-      ]
+      label: 'Dashboard',
+      icon: 'bi-speedometer2',
+      path: '/dashboard',
+      badge: 'New'
     },
     {
-      section: 'RIDES',
-      items: [
-        { 
-          path: '/rides', 
-          icon: 'bi-car-front', 
-          label: 'My Rides',
-          badge: { text: '2', variant: 'danger' }
-        },
-        { 
-          path: '/bookings', 
-          icon: 'bi-calendar-check', 
-          label: 'Bookings',
-          badge: { text: '1', variant: 'warning' }
-        }
-      ]
-    },
-    {
-      section: 'ACCOUNT',
-      items: [
-        { path: '/profile', icon: 'bi-person', label: 'Profile' },
-        { 
-          path: '/wallet', 
-          icon: 'bi-wallet2', 
-          label: 'Wallet',
-          badge: { text: '$128', variant: 'success' }
-        },
-        { path: '/favorites', icon: 'bi-heart', label: 'Favorites' },
-        { path: '/settings', icon: 'bi-gear', label: 'Settings' }
-      ]
-    },
-    {
-      section: 'SUPPORT',
-      items: [
-        { path: '/help', icon: 'bi-question-circle', label: 'Help Center' },
-        { 
-          path: '/messages', 
-          icon: 'bi-chat-dots', 
-          label: 'Messages',
-          badge: { text: '3', variant: 'primary' }
-        },
-        { path: '/contact', icon: 'bi-telephone', label: 'Contact Us' }
-      ]
+      label: 'Book Ride',
+      icon: 'bi-plus-circle',
+      path: '/book-ride',
+      badge: 'New'
     }
   ];
 
-  return (
-    <aside className={`sidebar ${isCollapsed ? 'collapsed' : ''}`}>
-      <div className="sidebar-header">
-        <NavLink to="/dashboard" className="brand-link">
-          <i className="bi bi-car-front text-primary"></i>
-          {!isCollapsed && <span>TravelHub</span>}
-        </NavLink>
-        <button 
-          className="sidebar-toggle"
-          onClick={toggleSidebar}
-          aria-label={isCollapsed ? 'Expand Sidebar' : 'Collapse Sidebar'}
+  const rideMenuItems = [
+    {
+      label: 'My Rides',
+      icon: 'bi-car-front',
+      path: '/my-rides',
+      badge: '2'
+    },
+    {
+      label: 'Bookings',
+      icon: 'bi-calendar-check',
+      path: '/bookings',
+      badge: '1'
+    }
+  ];
+
+  const accountMenuItems = [
+    {
+      label: 'Profile',
+      icon: 'bi-person',
+      path: '/profile'
+    },
+    {
+      label: 'Wallet',
+      icon: 'bi-wallet2',
+      path: '/wallet',
+      badge: '$128'
+    },
+    {
+      label: 'Favorites',
+      icon: 'bi-heart',
+      path: '/favorites'
+    },
+    {
+      label: 'Settings',
+      icon: 'bi-gear',
+      path: '/settings'
+    }
+  ];
+
+  const supportMenuItems = [
+    {
+      label: 'Help Center',
+      icon: 'bi-question-circle',
+      path: '/help'
+    },
+    {
+      label: 'Messages',
+      icon: 'bi-chat-left-text',
+      path: '/messages',
+      badge: '3'
+    },
+    {
+      label: 'Contact Us',
+      icon: 'bi-telephone',
+      path: '/contact'
+    },
+    {
+      label: 'Logout',
+      icon: 'bi-box-arrow-right',
+      onClick: handleLogout
+    }
+  ];
+
+  const renderMenuItem = (item) => {
+    const isActive = location.pathname === item.path;
+    if (item.onClick) {
+      return (
+        <button
+          key={item.label}
+          onClick={item.onClick}
+          className={`sidebar-item ${isActive ? 'active' : ''}`}
         >
+          <i className={`bi ${item.icon}`}></i>
+          <span className="sidebar-text">{item.label}</span>
+          {item.badge && <span className="sidebar-badge">{item.badge}</span>}
+        </button>
+      );
+    }
+    return (
+      <Link
+        key={item.path}
+        to={item.path}
+        className={`sidebar-item ${isActive ? 'active' : ''}`}
+      >
+        <i className={`bi ${item.icon}`}></i>
+        <span className="sidebar-text">{item.label}</span>
+        {item.badge && <span className="sidebar-badge">{item.badge}</span>}
+      </Link>
+    );
+  };
+
+  return (
+    <div className={`sidebar ${isCollapsed ? 'collapsed' : ''}`}>
+      <div className="sidebar-header">
+        <Link to="/" className="brand">
+          <i className="bi bi-car-front brand-icon"></i>
+          <span className="brand-text">TravelHub</span>
+        </Link>
+        <button className="collapse-btn" onClick={toggleSidebar}>
           <i className={`bi ${isCollapsed ? 'bi-chevron-right' : 'bi-chevron-left'}`}></i>
         </button>
       </div>
 
-      <div className="sidebar-user">
-        <div className="user-avatar-wrapper">
-          <Image
-            src={user?.profilePicture || 'https://via.placeholder.com/40'}
-            roundedCircle
-            className="user-avatar"
-            alt="Profile"
-          />
-          <span className="user-status online"></span>
+      <div className="sidebar-content">
+        <div className="user-info">
+          <img src="https://via.placeholder.com/40" alt="User" className="user-avatar" />
+          <div className="user-details">
+            <span className="user-name">Ibrahim altay</span>
+            <span className="user-role">Passenger</span>
+          </div>
         </div>
-        {!isCollapsed && (
-          <div className="user-info">
-            <div className="user-name">{user?.firstName} {user?.lastName}</div>
-            <div className="user-role">
-              <span className="status-dot"></span>
-              Passenger
-            </div>
-          </div>
-        )}
-      </div>
 
-      <div className="quick-actions-group">
-        {quickActions.map((action, index) => (
-          <OverlayTrigger
-            key={index}
-            placement="right"
-            overlay={isCollapsed ? <Tooltip>{action.label}</Tooltip> : <></>}
-          >
-            <button
-              className="quick-action-icon"
-              onClick={action.action}
-              aria-label={action.label}
-            >
-              <i className={`bi ${action.icon}`}></i>
-              {!isCollapsed && <span>{action.label}</span>}
-            </button>
-          </OverlayTrigger>
-        ))}
-      </div>
-      
-      <Nav className="sidebar-nav">
-        {navigationItems.map((section, index) => (
-          <div key={index} className="nav-section">
-            {!isCollapsed && (
-              <div className="nav-section-title">{section.section}</div>
-            )}
-            {section.items.map((item, itemIndex) => (
-              <OverlayTrigger
-                key={itemIndex}
-                placement="right"
-                overlay={isCollapsed ? <Tooltip>{item.label}</Tooltip> : <></>}
-              >
-                <NavLink
-                  to={item.path}
-                  className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}
-                >
-                  <i className={`bi ${item.icon}`}></i>
-                  {!isCollapsed && <span>{item.label}</span>}
-                  {!isCollapsed && item.badge && (
-                    <Badge bg={item.badge.variant} className="nav-badge">
-                      {item.badge.text}
-                    </Badge>
-                  )}
-                </NavLink>
-              </OverlayTrigger>
-            ))}
-          </div>
-        ))}
-      </Nav>
+        <div className="menu-section">
+          <div className="menu-label">MAIN</div>
+          {mainMenuItems.map(renderMenuItem)}
+        </div>
 
-      <div className="sidebar-footer">
-        <OverlayTrigger
-          placement="right"
-          overlay={isCollapsed ? <Tooltip>Logout</Tooltip> : <></>}
-        >
-          <button onClick={handleLogout} className="help-link">
-            <i className="bi bi-box-arrow-right"></i>
-            {!isCollapsed && <span>Logout</span>}
-          </button>
-        </OverlayTrigger>
+        <div className="menu-section">
+          <div className="menu-label">RIDES</div>
+          {rideMenuItems.map(renderMenuItem)}
+        </div>
+
+        <div className="menu-section">
+          <div className="menu-label">ACCOUNT</div>
+          {accountMenuItems.map(renderMenuItem)}
+        </div>
+
+        <div className="menu-section">
+          <div className="menu-label">SUPPORT</div>
+          {supportMenuItems.map(renderMenuItem)}
+        </div>
       </div>
-    </aside>
+    </div>
   );
 };
 

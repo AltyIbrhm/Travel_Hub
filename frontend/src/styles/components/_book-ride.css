@@ -1,0 +1,226 @@
+/* Book Ride Page Styles */
+.book-ride-container {
+  padding: 2rem;
+  height: 100%;
+}
+
+.book-ride-header {
+  margin-bottom: 2rem;
+}
+
+.page-title {
+  font-size: 2rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin-bottom: 0.5rem;
+}
+
+.page-subtitle {
+  color: var(--text-secondary);
+  font-size: 1rem;
+}
+
+.book-ride-content {
+  display: grid;
+  grid-template-columns: 2fr 1fr;
+  gap: 2rem;
+  height: calc(100vh - 200px);
+}
+
+.booking-form-section {
+  background: var(--bg-primary);
+  border-radius: 12px;
+  padding: 2rem;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.ride-summary-section {
+  background: var(--bg-primary);
+  border-radius: 12px;
+  padding: 2rem;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  height: fit-content;
+}
+
+.form-section {
+  margin-bottom: 2rem;
+}
+
+.form-section-title {
+  font-size: 1.25rem;
+  font-weight: 600;
+  margin-bottom: 1rem;
+  color: var(--text-primary);
+}
+
+.location-input {
+  position: relative;
+  margin-bottom: 1rem;
+}
+
+.location-input .form-control {
+  padding-left: 2.5rem;
+}
+
+.location-icon {
+  position: absolute;
+  left: 1rem;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--text-secondary);
+}
+
+.route-line {
+  width: 2px;
+  height: 30px;
+  background: var(--border-color);
+  margin: 0.5rem 0 0.5rem 1rem;
+}
+
+.saved-places {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  gap: 1rem;
+  margin-top: 1rem;
+}
+
+.saved-place-card {
+  background: var(--bg-secondary);
+  border-radius: 8px;
+  padding: 1rem;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.saved-place-card:hover {
+  background: rgba(var(--primary-color-rgb), 0.1);
+}
+
+.saved-place-icon {
+  font-size: 1.5rem;
+  color: var(--primary-color);
+  margin-bottom: 0.5rem;
+}
+
+.saved-place-name {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--text-primary);
+}
+
+.ride-options {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 1rem;
+  margin-top: 1rem;
+}
+
+.ride-option-card {
+  background: var(--bg-secondary);
+  border-radius: 8px;
+  padding: 1rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  border: 2px solid transparent;
+}
+
+.ride-option-card:hover,
+.ride-option-card.selected {
+  border-color: var(--primary-color);
+  background: rgba(var(--primary-color-rgb), 0.05);
+}
+
+.ride-option-header {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 0.5rem;
+}
+
+.ride-option-icon {
+  font-size: 1.5rem;
+  color: var(--primary-color);
+}
+
+.ride-option-name {
+  font-weight: 500;
+  color: var(--text-primary);
+}
+
+.ride-option-details {
+  font-size: 0.875rem;
+  color: var(--text-secondary);
+}
+
+.ride-option-price {
+  font-weight: 600;
+  color: var(--text-primary);
+  margin-top: 0.5rem;
+}
+
+.summary-section {
+  margin-bottom: 1.5rem;
+}
+
+.summary-title {
+  font-size: 1rem;
+  font-weight: 600;
+  margin-bottom: 1rem;
+  color: var(--text-primary);
+}
+
+.summary-item {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 0.5rem;
+  font-size: 0.875rem;
+}
+
+.summary-label {
+  color: var(--text-secondary);
+}
+
+.summary-value {
+  color: var(--text-primary);
+  font-weight: 500;
+}
+
+.total-section {
+  border-top: 1px solid var(--border-color);
+  padding-top: 1rem;
+  margin-top: 1rem;
+}
+
+.total-amount {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+/* Responsive Styles */
+@media (max-width: 992px) {
+  .book-ride-content {
+    grid-template-columns: 1fr;
+  }
+  
+  .ride-summary-section {
+    position: sticky;
+    bottom: 0;
+    border-radius: 12px 12px 0 0;
+  }
+}
+
+@media (max-width: 768px) {
+  .book-ride-container {
+    padding: 1rem;
+  }
+  
+  .ride-options {
+    grid-template-columns: 1fr;
+  }
+  
+  .saved-places {
+    grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+  }
+} 

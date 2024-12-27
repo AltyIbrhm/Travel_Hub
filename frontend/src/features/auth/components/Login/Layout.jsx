@@ -81,7 +81,7 @@ const LoginLayout = ({
 
             <div className="auth-links">
               Don't have an account?{' '}
-              <Link to="/signup" className="auth-link">
+              <Link to="/register" className="auth-link">
                 Sign Up
               </Link>
             </div>
