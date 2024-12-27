@@ -1,16 +1,15 @@
 import React from 'react';
-import { Link } from 'react-router-dom';
 import { Form, Button, Card, Alert } from 'react-bootstrap';
-import './styles.css';
+import { Link } from 'react-router-dom';
 
 const ForgotPasswordLayout = ({ email, error, success, isLoading, handleEmailChange, handleSubmit }) => {
   return (
-    <div className="forgot-password-container">
-      <Card className="forgot-password-card">
+    <div className="auth-container">
+      <Card className="auth-card">
         <Card.Body>
           <div className="text-center mb-4">
-            <h2 className="forgot-password-title">Forgot Password?</h2>
-            <p className="forgot-password-subtitle">Enter your email to reset your password</p>
+            <h2 className="auth-title">Forgot Password?</h2>
+            <p className="auth-subtitle">Enter your email to reset your password</p>
           </div>
 
           {error && (
@@ -25,8 +24,8 @@ const ForgotPasswordLayout = ({ email, error, success, isLoading, handleEmailCha
             </Alert>
           )}
 
-          <Form onSubmit={handleSubmit}>
-            <Form.Group className="mb-4">
+          <Form onSubmit={handleSubmit} className="auth-form">
+            <Form.Group className="form-group">
               <Form.Label>Email Address</Form.Label>
               <Form.Control
                 type="email"
@@ -40,15 +39,15 @@ const ForgotPasswordLayout = ({ email, error, success, isLoading, handleEmailCha
             <Button
               variant="primary"
               type="submit"
-              className="forgot-password-submit-btn"
+              className="auth-button"
               disabled={isLoading}
             >
               {isLoading ? 'Sending Reset Link...' : 'Reset Password'}
             </Button>
 
-            <div className="forgot-password-login-text">
+            <div className="auth-links">
               Remember your password?{' '}
-              <Link to="/login" className="forgot-password-login-link">
+              <Link to="/login" className="auth-link">
                 Back to Login
               </Link>
             </div>

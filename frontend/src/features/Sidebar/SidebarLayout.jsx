@@ -1,10 +1,9 @@
 import React from 'react';
 import { Nav, Image, Badge, OverlayTrigger, Tooltip } from 'react-bootstrap';
 import { NavLink, useNavigate } from 'react-router-dom';
-import { useSidebar } from '../../context/SidebarContext';
+import { useSidebar } from './context/SidebarContext';
 import { toast } from 'react-toastify';
-import authService from '../../../../features/auth/services/authService';
-import './sidebar.styles.css';
+import authService from '../../features/auth/services/authService';
 
 const SidebarLayout = () => {
   const navigate = useNavigate();
@@ -59,7 +58,12 @@ const SidebarLayout = () => {
           icon: 'bi-speedometer2', 
           label: 'Dashboard',
           badge: { text: 'New', variant: 'primary' }
-        },
+        }
+      ]
+    },
+    {
+      section: 'RIDES',
+      items: [
         { 
           path: '/rides', 
           icon: 'bi-car-front', 

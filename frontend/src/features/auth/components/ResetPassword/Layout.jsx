@@ -1,8 +1,7 @@
-import React from 'react';
-import { Link } from 'react-router-dom';
+import React, { useState } from 'react';
 import { Form, Button, Card, Alert, InputGroup } from 'react-bootstrap';
+import { Link } from 'react-router-dom';
 import { FaEye as EyeIcon, FaEyeSlash as EyeSlashIcon } from 'react-icons/fa';
-import './styles.css';
 
 const ResetPasswordLayout = ({
   token,
@@ -15,8 +14,8 @@ const ResetPasswordLayout = ({
   handleConfirmPasswordChange,
   handleSubmit
 }) => {
-  const [showPassword, setShowPassword] = React.useState(false);
-  const [showConfirmPassword, setShowConfirmPassword] = React.useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
   const togglePasswordVisibility = (field) => {
     if (field === 'password') {
@@ -36,15 +35,15 @@ const ResetPasswordLayout = ({
 
   if (!token) {
     return (
-      <div className="reset-password-container">
-        <Card className="reset-password-card">
+      <div className="auth-container">
+        <Card className="auth-card">
           <Card.Body>
             <div className="text-center mb-4">
-              <h2 className="reset-password-title">Invalid Reset Link</h2>
-              <p className="reset-password-subtitle">This password reset link is invalid or has expired.</p>
+              <h2 className="auth-title">Invalid Reset Link</h2>
+              <p className="auth-subtitle">This password reset link is invalid or has expired.</p>
             </div>
-            <div className="text-center">
-              <Link to="/forgot-password" className="reset-password-link">
+            <div className="auth-links">
+              <Link to="/forgot-password" className="auth-link">
                 Request a new reset link
               </Link>
             </div>
@@ -55,12 +54,12 @@ const ResetPasswordLayout = ({
   }
 
   return (
-    <div className="reset-password-container">
-      <Card className="reset-password-card">
+    <div className="auth-container">
+      <Card className="auth-card">
         <Card.Body>
           <div className="text-center mb-4">
-            <h2 className="reset-password-title">Reset Password</h2>
-            <p className="reset-password-subtitle">Enter your new password below</p>
+            <h2 className="auth-title">Reset Password</h2>
+            <p className="auth-subtitle">Enter your new password below</p>
           </div>
 
           {error && (
@@ -75,8 +74,8 @@ const ResetPasswordLayout = ({
             </Alert>
           )}
 
-          <Form onSubmit={handleSubmit}>
-            <Form.Group className="mb-3">
+          <Form onSubmit={handleSubmit} className="auth-form">
+            <Form.Group className="form-group">
               <Form.Label>New Password</Form.Label>
               <InputGroup>
                 <Form.Control
@@ -117,7 +116,7 @@ const ResetPasswordLayout = ({
               </ul>
             </div>
 
-            <Form.Group className="mb-4">
+            <Form.Group className="form-group">
               <Form.Label>Confirm New Password</Form.Label>
               <InputGroup>
                 <Form.Control
@@ -140,15 +139,15 @@ const ResetPasswordLayout = ({
             <Button
               variant="primary"
               type="submit"
-              className="reset-password-submit-btn"
+              className="auth-button"
               disabled={isLoading}
             >
               {isLoading ? 'Resetting Password...' : 'Reset Password'}
             </Button>
 
-            <div className="text-center mt-3">
+            <div className="auth-links">
               Remember your password?{' '}
-              <Link to="/login" className="reset-password-login-link">
+              <Link to="/login" className="auth-link">
                 Back to Login
               </Link>
             </div>

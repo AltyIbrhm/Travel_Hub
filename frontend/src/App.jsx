@@ -10,12 +10,10 @@ import Signup from './features/auth/components/Signup';
 import ForgotPassword from './features/auth/components/ForgotPassword';
 import ResetPassword from './features/auth/components/ResetPassword';
 
-// Dashboard Component
-import Dashboard from './features/dashboard/components/Dashboard/Dashboard';
-import { SidebarProvider } from './features/dashboard/context/SidebarContext';
-
-// Profile Component
-import Profile from './features/profile/Profile';
+// Main Components
+import Sidebar from './features/Sidebar';
+import Profile from './features/profile';
+import { SidebarProvider } from './features/Sidebar/context/SidebarContext';
 
 // Protected Route Component
 const ProtectedRoute = ({ children }) => {
@@ -43,7 +41,7 @@ function App() {
             element={
               <ProtectedRoute>
                 <SidebarProvider>
-                  <Dashboard />
+                  <Sidebar />
                 </SidebarProvider>
               </ProtectedRoute>
             }
@@ -53,9 +51,7 @@ function App() {
             path="/profile"
             element={
               <ProtectedRoute>
-                <SidebarProvider>
-                  <Profile />
-                </SidebarProvider>
+                <Profile />
               </ProtectedRoute>
             }
           />

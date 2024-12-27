@@ -1,8 +1,7 @@
 import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
 import { Form, Button, Card, Alert, InputGroup } from 'react-bootstrap';
+import { Link } from 'react-router-dom';
 import { FaEye as EyeIcon, FaEyeSlash as EyeSlashIcon } from 'react-icons/fa';
-import './styles.css';
 
 const LoginLayout = ({
   email,
@@ -20,12 +19,12 @@ const LoginLayout = ({
   };
 
   return (
-    <div className="login-container">
-      <Card className="login-card">
+    <div className="auth-container">
+      <Card className="auth-card">
         <Card.Body>
           <div className="text-center mb-4">
-            <h2 className="login-title">Welcome Back!</h2>
-            <p className="login-subtitle">Please sign in to continue</p>
+            <h2 className="auth-title">Welcome Back!</h2>
+            <p className="auth-subtitle">Please sign in to continue</p>
           </div>
 
           {error && (
@@ -34,8 +33,8 @@ const LoginLayout = ({
             </Alert>
           )}
 
-          <Form onSubmit={handleSubmit}>
-            <Form.Group className="mb-3">
+          <Form onSubmit={handleSubmit} className="auth-form">
+            <Form.Group className="form-group">
               <Form.Label>Email</Form.Label>
               <Form.Control
                 type="email"
@@ -46,7 +45,7 @@ const LoginLayout = ({
               />
             </Form.Group>
 
-            <Form.Group className="mb-4">
+            <Form.Group className="form-group">
               <Form.Label>Password</Form.Label>
               <InputGroup>
                 <Form.Control
@@ -65,7 +64,7 @@ const LoginLayout = ({
                 </Button>
               </InputGroup>
               <div className="d-flex justify-content-end mt-2">
-                <Link to="/forgot-password" className="forgot-password-link">
+                <Link to="/forgot-password" className="auth-link">
                   Forgot Password?
                 </Link>
               </div>
@@ -74,15 +73,15 @@ const LoginLayout = ({
             <Button
               variant="primary"
               type="submit"
-              className="login-submit-btn"
+              className="auth-button"
               disabled={isLoading}
             >
               {isLoading ? 'Signing In...' : 'Sign In'}
             </Button>
 
-            <div className="text-center mt-3">
+            <div className="auth-links">
               Don't have an account?{' '}
-              <Link to="/signup" className="signup-link">
+              <Link to="/signup" className="auth-link">
                 Sign Up
               </Link>
             </div>

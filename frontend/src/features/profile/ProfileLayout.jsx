@@ -1,214 +1,139 @@
-import React from 'react';
-import { Container, Row, Col, Form, Button, Alert, ProgressBar } from 'react-bootstrap';
+import React, { useState } from 'react';
+import { Form, Button } from 'react-bootstrap';
+import { FaCamera } from 'react-icons/fa';
 
-const ProfileLayout = ({
-  formData,
-  previewImage,
-  message,
-  isLoading,
-  isEditing,
-  setIsEditing,
-  navigate,
-  handleDeletePicture,
-  handleSubmit,
-  handleFileChange,
-  handleChange,
-  fileInputRef,
-  uploadProgress,
-  imageKey,
-  isDeletingPhoto
-}) => {
+const ProfileLayout = ({ user, onSave }) => {
+  const [formData, setFormData] = useState({
+    firstName: user?.firstName || '',
+    lastName: user?.lastName || '',
+    email: user?.email || '',
+    phoneNumber: user?.phoneNumber || '',
+    role: user?.role || 'Passenger'
+  });
+
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({
+      ...prev,
+      [name]: value
+    }));
+  };
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    onSave(formData);
+  };
+
+  const stats = [
+    { label: 'Total Rides', value: '28' },
+    { label: 'Completed', value: '25' },
+    { label: 'Cancelled', value: '3' },
+    { label: 'Rating', value: '4.8' }
+  ];
+
   return (
-    <Container className="py-4">
-      <button 
-        className="back-button"
-        onClick={() => navigate(-1)}
-      >
-        <i className="bi bi-arrow-left"></i>
-        Back to Dashboard
-      </button>
-
-      <div className="profile-card">
-        <div className="profile-header">
-          <h2 className="profile-title">Profile Settings</h2>
-          {!isEditing && (
-            <Button
-              variant="primary"
-              onClick={() => setIsEditing(true)}
-              disabled={isLoading}
-            >
-              <i className="bi bi-pencil me-2"></i>
-              Edit Profile
-            </Button>
-          )}
+    <div className="profile-container">
+      {/* Profile Header */}
+      <div className="profile-header">
+        <div className="profile-avatar-wrapper">
+          <img
+            src={user?.profilePicture || 'https://via.placeholder.com/120'}
+            alt="Profile"
+            className="profile-avatar"
+          />
+          <button className="profile-avatar-upload">
+            <FaCamera />
+          </button>
         </div>
-        
-        {message.text && (
-          <Alert variant={message.type === 'error' ? 'danger' : 'success'} className="mb-4">
-            <i className={`bi ${message.type === 'error' ? 'bi-exclamation-circle' : 'bi-check-circle'} me-2`}></i>
-            {message.text}
-          </Alert>
-        )}
-
-        <Form onSubmit={handleSubmit}>
-          <div className="text-center">
-            <div className="profile-picture-container">
-              {previewImage ? (
-                <img
-                  src={`${previewImage}?key=${imageKey}`}
-                  alt="Profile"
-                  className="profile-picture mb-3"
-                />
-              ) : (
-                <div className="profile-picture-placeholder mb-3">
-                  {formData.firstName?.charAt(0)?.toUpperCase() || 'U'}
-                </div>
-              )}
-              
-              {isEditing && (
-                <div className="profile-picture-actions">
-                  <input
-                    type="file"
-                    ref={fileInputRef}
-                    onChange={handleFileChange}
-                    accept="image/*"
-                    style={{ display: 'none' }}
-                  />
-                  <Button
-                    variant="outline-primary"
-                    onClick={() => fileInputRef.current.click()}
-                    disabled={isLoading}
-                    className="me-2"
-                  >
-                    <i className="bi bi-camera me-2"></i>
-                    Change Photo
-                  </Button>
-                  {previewImage && (
-                    <Button
-                      variant="outline-danger"
-                      onClick={handleDeletePicture}
-                      disabled={isLoading || isDeletingPhoto}
-                    >
-                      <i className="bi bi-trash me-2"></i>
-                      {isDeletingPhoto ? 'Deleting...' : 'Delete Photo'}
-                    </Button>
-                  )}
-                </div>
-              )}
-              
-              {uploadProgress > 0 && uploadProgress < 100 && (
-                <ProgressBar now={uploadProgress} className="mt-2" />
-              )}
-            </div>
+        <div className="profile-info">
+          <h1 className="profile-name">{`${formData.firstName} ${formData.lastName}`}</h1>
+          <div className="profile-role">
+            <span className="profile-status"></span>
+            {formData.role}
           </div>
-
-          <div className="form-section">
-            <div className="section-title">
-              <i className="bi bi-person"></i>
-              Personal Information
-            </div>
-            <Row>
-              <Col md={6}>
-                <Form.Group className="mb-3">
-                  <Form.Label>First Name</Form.Label>
-                  <Form.Control
-                    type="text"
-                    name="firstName"
-                    value={formData.firstName}
-                    onChange={handleChange}
-                    disabled={!isEditing || isLoading}
-                    required
-                  />
-                </Form.Group>
-              </Col>
-              <Col md={6}>
-                <Form.Group className="mb-3">
-                  <Form.Label>Last Name</Form.Label>
-                  <Form.Control
-                    type="text"
-                    name="lastName"
-                    value={formData.lastName}
-                    onChange={handleChange}
-                    disabled={!isEditing || isLoading}
-                    required
-                  />
-                </Form.Group>
-              </Col>
-            </Row>
-          </div>
-
-          <div className="form-section">
-            <div className="section-title">
-              <i className="bi bi-envelope"></i>
-              Contact Information
-            </div>
-            <Form.Group className="mb-3">
-              <Form.Label>Email</Form.Label>
-              <Form.Control
-                type="email"
-                name="email"
-                value={formData.email}
-                onChange={handleChange}
-                disabled={!isEditing || isLoading}
-                required
-              />
-            </Form.Group>
-
-            <Form.Group className="mb-3">
-              <Form.Label>Phone</Form.Label>
-              <Form.Control
-                type="tel"
-                name="phone"
-                value={formData.phone}
-                onChange={handleChange}
-                disabled={!isEditing || isLoading}
-                placeholder={!isEditing ? 'No phone number added' : 'Enter your phone number'}
-              />
-            </Form.Group>
-          </div>
-
-          <div className="form-section">
-            <div className="section-title">
-              <i className="bi bi-geo-alt"></i>
-              Address Information
-            </div>
-            <Form.Group className="mb-3">
-              <Form.Label>Address</Form.Label>
-              <Form.Control
-                as="textarea"
-                name="address"
-                value={formData.address}
-                onChange={handleChange}
-                disabled={!isEditing || isLoading}
-                rows={3}
-                placeholder={!isEditing ? 'No address added' : 'Enter your address'}
-              />
-            </Form.Group>
-          </div>
-
-          {isEditing && (
-            <div className="action-buttons">
-              <Button
-                variant="outline-secondary"
-                onClick={() => setIsEditing(false)}
-                disabled={isLoading}
-              >
-                <i className="bi bi-x-lg me-2"></i>
-                Cancel
-              </Button>
-              <Button
-                type="submit"
-                variant="primary"
-                disabled={isLoading}
-              >
-                <i className="bi bi-check-lg me-2"></i>
-                {isLoading ? 'Saving Changes...' : 'Save Changes'}
-              </Button>
-            </div>
-          )}
-        </Form>
+        </div>
       </div>
-    </Container>
+
+      {/* Profile Content */}
+      <div className="profile-content">
+        {/* Profile Details */}
+        <div className="profile-section">
+          <h2 className="profile-section-title">Personal Information</h2>
+          <Form onSubmit={handleSubmit}>
+            <div className="profile-form-group">
+              <Form.Group>
+                <label className="profile-label">First Name</label>
+                <input
+                  type="text"
+                  name="firstName"
+                  value={formData.firstName}
+                  onChange={handleChange}
+                  className="profile-input"
+                />
+              </Form.Group>
+            </div>
+
+            <div className="profile-form-group">
+              <Form.Group>
+                <label className="profile-label">Last Name</label>
+                <input
+                  type="text"
+                  name="lastName"
+                  value={formData.lastName}
+                  onChange={handleChange}
+                  className="profile-input"
+                />
+              </Form.Group>
+            </div>
+
+            <div className="profile-form-group">
+              <Form.Group>
+                <label className="profile-label">Email</label>
+                <input
+                  type="email"
+                  name="email"
+                  value={formData.email}
+                  onChange={handleChange}
+                  className="profile-input"
+                  disabled
+                />
+              </Form.Group>
+            </div>
+
+            <div className="profile-form-group">
+              <Form.Group>
+                <label className="profile-label">Phone Number</label>
+                <input
+                  type="tel"
+                  name="phoneNumber"
+                  value={formData.phoneNumber}
+                  onChange={handleChange}
+                  className="profile-input"
+                  placeholder="e.g., (555) 123-4567"
+                />
+              </Form.Group>
+            </div>
+
+            <Button type="submit" className="profile-save-btn">
+              Save Changes
+            </Button>
+          </Form>
+        </div>
+
+        {/* Profile Stats */}
+        <div className="profile-section">
+          <h2 className="profile-section-title">Statistics</h2>
+          <div className="profile-stats">
+            {stats.map((stat, index) => (
+              <div key={index} className="stat-card">
+                <div className="stat-value">{stat.value}</div>
+                <div className="stat-label">{stat.label}</div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+    </div>
   );
 };
 
