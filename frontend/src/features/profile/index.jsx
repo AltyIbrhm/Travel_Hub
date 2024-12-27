@@ -1,10 +1,10 @@
 import React from 'react';
 import Sidebar from '../Sidebar';
 import ProfileLayout from './ProfileLayout';
-import { SidebarProvider, useSidebar } from '../Sidebar/context/SidebarContext';
+import { SidebarProvider } from '../Sidebar/context/SidebarContext';
+import PageLayout from '../../components/Layout/PageLayout';
 
 const ProfileContainer = () => {
-  const { isCollapsed } = useSidebar();
   const user = JSON.parse(localStorage.getItem('user')) || {};
 
   const handleSave = (formData) => {
@@ -13,9 +13,9 @@ const ProfileContainer = () => {
   };
 
   return (
-    <div className={`profile-container ${isCollapsed ? 'sidebar-collapsed' : ''}`}>
+    <PageLayout>
       <ProfileLayout user={user} onSave={handleSave} />
-    </div>
+    </PageLayout>
   );
 };
 
