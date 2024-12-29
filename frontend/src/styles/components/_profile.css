@@ -220,40 +220,45 @@
 }
 
 .profile-tabs {
-  margin-bottom: 2.5rem;
+  margin-bottom: 2rem;
   border-bottom: 2px solid var(--border-color);
   background: var(--bg-primary);
   padding: 0;
+  position: relative;
 }
 
 .profile-tabs .nav-link {
   color: var(--text-secondary);
   padding: 1rem 2rem;
   border: none;
-  font-weight: 600;
-  font-size: 1.1rem;
+  font-weight: 500;
+  font-size: 1rem;
   position: relative;
-  transition: all 0.3s ease;
+  transition: all 0.2s ease;
 }
 
 .profile-tabs .nav-link:hover {
   color: var(--primary-color);
 }
 
-.profile-tabs .nav-link.active {
-  color: var(--primary-color);
-  background-color: transparent;
-}
-
-.profile-tabs .nav-link.active::after {
+.profile-tabs .nav-link:hover::after {
   content: '';
   position: absolute;
   bottom: -2px;
   left: 0;
   width: 100%;
-  height: 3px;
-  background: linear-gradient(90deg, var(--primary-color), var(--primary-dark));
+  height: 2px;
+  background: var(--border-color);
   border-radius: 3px 3px 0 0;
+}
+
+.profile-tabs .nav-link.active {
+  color: var(--primary-color);
+  font-weight: 600;
+}
+
+.profile-tabs .nav-link.active::after {
+  background: var(--primary-color);
 }
 
 /* Profile Details */
@@ -264,12 +269,15 @@
   border-radius: 1.5rem;
   transition: all 0.3s ease;
   border: 1px solid rgba(var(--border-color), 0.08);
-  box-shadow: 0 4px 25px -5px rgba(0, 0, 0, 0.05);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.02);
 }
 
 .profile-section:hover {
-  box-shadow: 0 8px 30px -5px rgba(0, 0, 0, 0.08);
   transform: translateY(-2px);
+  box-shadow: 
+    0 10px 20px rgba(0, 0, 0, 0.05),
+    0 6px 6px rgba(0, 0, 0, 0.02);
+  border-color: rgba(var(--primary-rgb), 0.1);
 }
 
 .profile-section-title {
@@ -1030,19 +1038,16 @@ input[type="date"].profile-input {
 
 /* Emergency Contact Specific Styles */
 .profile-section:has(.section-title .section-icon) {
-  border-left: 4px solid var(--primary-color);
-  padding-left: 2.25rem;
-  box-shadow: 
-    0 4px 25px -5px rgba(0, 0, 0, 0.05),
-    -1px 0 2px -1px rgba(var(--primary-rgb), 0.1);
-}
-
-.profile-section:has(.section-title .section-icon) .section-title::before {
-  display: none;
+  padding: 2.5rem;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.02);
 }
 
 .profile-section:has(.section-title .section-icon):hover {
-  border-left-color: var(--primary-dark);
+  transform: translateY(-2px);
+  box-shadow: 
+    0 10px 20px rgba(0, 0, 0, 0.05),
+    0 6px 6px rgba(0, 0, 0, 0.02);
+  border-color: rgba(var(--primary-rgb), 0.1);
 }
 
 select.profile-input option {
