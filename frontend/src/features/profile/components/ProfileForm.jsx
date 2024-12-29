@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { Form, Toast } from 'react-bootstrap';
-import { FaUser, FaEnvelope, FaPhone, FaBirthdayCake, FaLanguage, FaMapMarkerAlt, FaCheck } from 'react-icons/fa';
+import { FaUser, FaEnvelope, FaPhone, FaBirthdayCake, FaLanguage, FaMapMarkerAlt, FaCheck, FaIdCard } from 'react-icons/fa';
 
 export const ProfileForm = ({ formData, handleChange, handleSubmit }) => {
   const [isSaving, setIsSaving] = useState(false);
@@ -139,7 +139,10 @@ export const ProfileForm = ({ formData, handleChange, handleSubmit }) => {
 
       <Form className="profile-form" onSubmit={handleFormSubmit}>
         <div className="profile-section">
-          <h3 className="section-title">Personal Information</h3>
+          <h3 className="section-title">
+            <FaIdCard className="section-icon" />
+            Personal Information
+          </h3>
           <div className="profile-form-row">
             <Form.Group className="profile-form-group">
               <label className="profile-label">
