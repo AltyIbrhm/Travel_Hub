@@ -1,4 +1,5 @@
 const swaggerJsdoc = require('swagger-jsdoc');
+const profileDocs = require('../features/profile/docs/swagger');
 
 const options = {
   definition: {
@@ -47,6 +48,7 @@ const options = {
             phoneNumber: { type: 'string' },
           },
         },
+        ...profileDocs.schemas
       },
       securitySchemes: {
         bearerAuth: {
@@ -57,7 +59,10 @@ const options = {
       },
     },
   },
-  apis: ['./src/routes/*.js'], // Path to the API routes
+  apis: [
+    './src/routes/*.js',
+    './src/features/*/docs/swagger.js'  // Include feature documentation
+  ],
 };
 
 const specs = swaggerJsdoc(options);
