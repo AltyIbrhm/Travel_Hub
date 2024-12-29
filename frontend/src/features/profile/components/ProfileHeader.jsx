@@ -22,9 +22,7 @@ export const ProfileHeader = ({ user, formData }) => {
           {formData.role}
         </div>
         <div className="profile-badges">
-          <Badge bg="primary">Verified User</Badge>
-          <Badge bg="success">Premium Member</Badge>
-          <Badge bg="warning">Top Rider</Badge>
+          <Badge bg="success">Verified User</Badge>
         </div>
       </div>
     </div>
