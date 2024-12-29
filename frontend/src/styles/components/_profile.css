@@ -205,16 +205,35 @@
 
 /* Profile Stats */
 .profile-stats {
+  margin: 2rem 0;
+  padding: 1.5rem;
+  background-color: var(--bg-primary);
+  border-radius: 0.5rem;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.section-title {
+  font-size: 1.25rem;
+  font-weight: 600;
+  margin-bottom: 1.5rem;
+  color: var(--text-primary);
+  padding-bottom: 0.5rem;
+  border-bottom: 2px solid var(--border-color);
+}
+
+.stats-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-  gap: 1rem;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 1.5rem;
 }
 
 .stat-card {
   padding: 1.5rem;
   background-color: var(--bg-secondary);
   border-radius: 0.5rem;
-  text-align: center;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
   transition: all 0.3s ease;
 }
 
@@ -224,21 +243,93 @@
 }
 
 .stat-icon {
-  font-size: 1.5rem;
+  font-size: 1.75rem;
   color: var(--primary-color);
-  margin-bottom: 0.5rem;
+  background-color: rgba(var(--primary-rgb), 0.1);
+  padding: 0.75rem;
+  border-radius: 0.5rem;
 }
 
-.stat-value {
+.stat-info {
+  flex: 1;
+}
+
+.stat-info h3 {
   font-size: 1.5rem;
   font-weight: 600;
   color: var(--text-primary);
-  margin-bottom: 0.25rem;
+  margin: 0;
 }
 
-.stat-label {
+.stat-info p {
   color: var(--text-secondary);
   font-size: 0.875rem;
+  margin: 0;
+}
+
+/* Recent Activity */
+.profile-activity {
+  margin: 2rem 0;
+  padding: 1.5rem;
+  background-color: var(--bg-primary);
+  border-radius: 0.5rem;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.activity-list {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.activity-item {
+  display: grid;
+  grid-template-columns: auto 1fr auto auto;
+  align-items: center;
+  gap: 1.5rem;
+  padding: 1rem;
+  background-color: var(--bg-secondary);
+  border-radius: 0.5rem;
+  transition: all 0.3s ease;
+}
+
+.activity-item:hover {
+  transform: translateX(2px);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.activity-type {
+  font-weight: 500;
+  color: var(--primary-color);
+  background-color: rgba(var(--primary-rgb), 0.1);
+  padding: 0.5rem 1rem;
+  border-radius: 0.25rem;
+}
+
+.activity-description {
+  color: var(--text-primary);
+}
+
+.activity-date {
+  color: var(--text-secondary);
+  font-size: 0.875rem;
+}
+
+.activity-amount {
+  font-weight: 500;
+  color: var(--text-primary);
+}
+
+@media (max-width: 768px) {
+  .stats-grid {
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  }
+
+  .activity-item {
+    grid-template-columns: 1fr;
+    gap: 0.5rem;
+    text-align: center;
+  }
 }
 
 .payment-methods,
@@ -307,60 +398,6 @@
 .add-location-btn:hover {
   border-color: var(--primary-color);
   color: var(--primary-color);
-}
-
-.activity-list {
-  display: grid;
-  gap: 1rem;
-}
-
-.activity-item {
-  display: flex;
-  align-items: center;
-  gap: 1rem;
-  padding: 1rem;
-  background-color: var(--bg-secondary);
-  border-radius: 0.5rem;
-  transition: all 0.3s ease;
-}
-
-.activity-item:hover {
-  transform: translateX(4px);
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-}
-
-.activity-icon {
-  width: 40px;
-  height: 40px;
-  border-radius: 50%;
-  background-color: rgba(var(--primary-rgb), 0.1);
-  color: var(--primary-color);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 1.25rem;
-}
-
-.activity-details {
-  flex: 1;
-}
-
-.activity-details h4 {
-  font-size: 1rem;
-  font-weight: 500;
-  margin-bottom: 0.25rem;
-  color: var(--text-primary);
-}
-
-.activity-details p {
-  color: var(--text-secondary);
-  font-size: 0.875rem;
-  margin: 0;
-}
-
-.activity-amount {
-  font-weight: 600;
-  color: var(--text-primary);
 }
 
 /* Responsive Adjustments */
