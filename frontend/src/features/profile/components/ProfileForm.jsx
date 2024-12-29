@@ -1,10 +1,21 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { Form, Toast } from 'react-bootstrap';
-import { FaUser, FaEnvelope, FaPhone, FaBirthdayCake, FaLanguage, FaMapMarkerAlt, FaCheck, FaIdCard } from 'react-icons/fa';
+import { 
+  FaUser, 
+  FaEnvelope, 
+  FaPhone, 
+  FaBirthdayCake, 
+  FaLanguage, 
+  FaMapMarkerAlt, 
+  FaCheck, 
+  FaIdCard
+} from 'react-icons/fa';
 
 export const ProfileForm = ({ formData, handleChange, handleSubmit }) => {
   const [isSaving, setIsSaving] = useState(false);
   const [showSaveToast, setShowSaveToast] = useState(false);
+  const initialFormData = useRef(formData);
+  const [hasChanges, setHasChanges] = useState(false);
 
   const languages = [
     { value: 'English', label: 'English (US)' },
@@ -19,8 +30,18 @@ export const ProfileForm = ({ formData, handleChange, handleSubmit }) => {
     { value: 'Korean', label: '한국어' }
   ];
 
+  // Check for actual changes in form data
+  useEffect(() => {
+    const hasFormChanged = Object.keys(formData).some(
+      key => formData[key] !== initialFormData.current[key]
+    );
+    setHasChanges(hasFormChanged);
+  }, [formData]);
+
   // Auto-save when form data changes
   useEffect(() => {
+    if (!hasChanges) return;
+
     setIsSaving(true);
     const saveTimeout = setTimeout(() => {
       const mockEvent = {
@@ -33,13 +54,16 @@ export const ProfileForm = ({ formData, handleChange, handleSubmit }) => {
       
       // Hide toast after 3 seconds
       setTimeout(() => setShowSaveToast(false), 3000);
+
+      // Update initial form data after successful save
+      initialFormData.current = { ...formData };
     }, 1000);
 
     return () => {
       clearTimeout(saveTimeout);
       setIsSaving(false);
     };
-  }, [formData, handleSubmit]);
+  }, [formData, handleSubmit, hasChanges]);
 
   const handleFormSubmit = (e) => {
     e.preventDefault();
@@ -138,6 +162,7 @@ export const ProfileForm = ({ formData, handleChange, handleSubmit }) => {
       </div>
 
       <Form className="profile-form" onSubmit={handleFormSubmit}>
+        {/* Personal Information Section */}
         <div className="profile-section">
           <h3 className="section-title">
             <FaIdCard className="section-icon" />
@@ -271,13 +296,14 @@ export const ProfileForm = ({ formData, handleChange, handleSubmit }) => {
             <small className="field-help">Enter your complete address including city and postal code</small>
           </Form.Group>
         </div>
-        {isSaving && (
-          <div className="autosave-indicator">
-            <span className="saving-spinner"></span>
-            Saving changes...
-          </div>
-        )}
       </Form>
+
+      {isSaving && (
+        <div className="autosave-indicator">
+          <span className="saving-spinner"></span>
+          Saving changes...
+        </div>
+      )}
     </>
   );
 };

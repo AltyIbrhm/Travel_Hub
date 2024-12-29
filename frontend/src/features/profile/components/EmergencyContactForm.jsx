@@ -1,13 +1,25 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { Form, Toast } from 'react-bootstrap';
 import { FaUser, FaPhone, FaUserFriends, FaCheck } from 'react-icons/fa';
 
 export const EmergencyContactForm = ({ formData, handleChange, handleSubmit }) => {
   const [isSaving, setIsSaving] = useState(false);
   const [showSaveToast, setShowSaveToast] = useState(false);
+  const initialFormData = useRef(formData);
+  const [hasChanges, setHasChanges] = useState(false);
+
+  // Check for actual changes in form data
+  useEffect(() => {
+    const hasFormChanged = Object.keys(formData).some(
+      key => formData[key] !== initialFormData.current[key]
+    );
+    setHasChanges(hasFormChanged);
+  }, [formData]);
 
   // Auto-save when form data changes
   useEffect(() => {
+    if (!hasChanges) return;
+
     setIsSaving(true);
     const saveTimeout = setTimeout(() => {
       const mockEvent = {
@@ -20,13 +32,16 @@ export const EmergencyContactForm = ({ formData, handleChange, handleSubmit }) =
       
       // Hide toast after 3 seconds
       setTimeout(() => setShowSaveToast(false), 3000);
+
+      // Update initial form data after successful save
+      initialFormData.current = { ...formData };
     }, 1000);
 
     return () => {
       clearTimeout(saveTimeout);
       setIsSaving(false);
     };
-  }, [formData, handleSubmit]);
+  }, [formData, handleSubmit, hasChanges]);
 
   const handleFormSubmit = (e) => {
     e.preventDefault();
@@ -155,13 +170,14 @@ export const EmergencyContactForm = ({ formData, handleChange, handleSubmit }) =
             </Form.Group>
           </div>
         </div>
-        {isSaving && (
-          <div className="autosave-indicator">
-            <span className="saving-spinner"></span>
-            Saving changes...
-          </div>
-        )}
       </Form>
+
+      {isSaving && (
+        <div className="autosave-indicator">
+          <span className="saving-spinner"></span>
+          Saving changes...
+        </div>
+      )}
     </>
   );
 };
