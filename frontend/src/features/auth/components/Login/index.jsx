@@ -40,6 +40,14 @@ const Login = () => {
       // Store token and user data in localStorage
       localStorage.setItem('token', data.token);
       localStorage.setItem('user', JSON.stringify(data.user));
+      
+      // Store individual fields for easy access
+      if (data.user) {
+        localStorage.setItem('userEmail', data.user.email);
+        localStorage.setItem('firstName', data.user.firstName);
+        localStorage.setItem('lastName', data.user.lastName);
+        localStorage.setItem('phoneNumber', data.user.phoneNumber);
+      }
 
       // Navigate to dashboard
       navigate('/dashboard');
