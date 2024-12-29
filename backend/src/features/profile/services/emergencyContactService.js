@@ -11,9 +11,9 @@ class EmergencyContactService {
           SELECT 
             EmergencyContactID,
             UserID,
-            EmergencyName,
-            EmergencyPhone,
-            EmergencyRelationship,
+            emergencyName,
+            emergencyPhone,
+            emergencyRelationship,
             CreatedAt,
             UpdatedAt
           FROM EmergencyContacts
@@ -27,9 +27,58 @@ class EmergencyContactService {
     }
   }
 
+  // Raw emergency contact creation that bypasses validation
+  async createEmergencyContactRaw(contactData) {
+    try {
+      const pool = await getConnection();
+      
+      // Insert the emergency contact directly
+      const result = await pool.request()
+        .input('userId', sql.Int, contactData.userId)
+        .input('emergencyName', sql.NVarChar(100), contactData.emergencyName || '')
+        .input('emergencyPhone', sql.NVarChar(20), contactData.emergencyPhone || '')
+        .input('emergencyRelationship', sql.NVarChar(20), contactData.emergencyRelationship || '')
+        .query(`
+          INSERT INTO EmergencyContacts (
+            UserID,
+            emergencyName,
+            emergencyPhone,
+            emergencyRelationship,
+            CreatedAt,
+            UpdatedAt
+          )
+          OUTPUT 
+            INSERTED.EmergencyContactID,
+            INSERTED.UserID,
+            INSERTED.emergencyName,
+            INSERTED.emergencyPhone,
+            INSERTED.emergencyRelationship,
+            INSERTED.CreatedAt,
+            INSERTED.UpdatedAt
+          VALUES (
+            @userId,
+            @emergencyName,
+            @emergencyPhone,
+            @emergencyRelationship,
+            GETDATE(),
+            GETDATE()
+          );
+        `);
+      
+      return result.recordset[0];
+    } catch (error) {
+      console.error('Error in createEmergencyContactRaw:', error);
+      throw error;
+    }
+  }
+
   async createEmergencyContact(contactData) {
     try {
       const pool = await getConnection();
+      
+      // Validate data here if needed
+      
+      // Insert the emergency contact
       const result = await pool.request()
         .input('userId', sql.Int, contactData.userId)
         .input('emergencyName', sql.NVarChar(100), contactData.emergencyName)
@@ -38,18 +87,28 @@ class EmergencyContactService {
         .query(`
           INSERT INTO EmergencyContacts (
             UserID,
-            EmergencyName,
-            EmergencyPhone,
-            EmergencyRelationship
+            emergencyName,
+            emergencyPhone,
+            emergencyRelationship,
+            CreatedAt,
+            UpdatedAt
           )
+          OUTPUT 
+            INSERTED.EmergencyContactID,
+            INSERTED.UserID,
+            INSERTED.emergencyName,
+            INSERTED.emergencyPhone,
+            INSERTED.emergencyRelationship,
+            INSERTED.CreatedAt,
+            INSERTED.UpdatedAt
           VALUES (
             @userId,
             @emergencyName,
             @emergencyPhone,
-            @emergencyRelationship
+            @emergencyRelationship,
+            GETDATE(),
+            GETDATE()
           );
-          
-          SELECT SCOPE_IDENTITY() AS EmergencyContactID;
         `);
       
       return result.recordset[0];
@@ -62,6 +121,8 @@ class EmergencyContactService {
   async updateEmergencyContact(userId, contactData) {
     try {
       const pool = await getConnection();
+      
+      // Update the emergency contact
       const result = await pool.request()
         .input('userId', sql.Int, userId)
         .input('emergencyName', sql.NVarChar(100), contactData.emergencyName)
@@ -69,13 +130,20 @@ class EmergencyContactService {
         .input('emergencyRelationship', sql.NVarChar(20), contactData.emergencyRelationship)
         .query(`
           UPDATE EmergencyContacts
-          SET
-            EmergencyName = @emergencyName,
-            EmergencyPhone = @emergencyPhone,
-            EmergencyRelationship = @emergencyRelationship
+          SET 
+            emergencyName = @emergencyName,
+            emergencyPhone = @emergencyPhone,
+            emergencyRelationship = @emergencyRelationship,
+            UpdatedAt = GETDATE()
+          OUTPUT 
+            INSERTED.EmergencyContactID,
+            INSERTED.UserID,
+            INSERTED.emergencyName,
+            INSERTED.emergencyPhone,
+            INSERTED.emergencyRelationship,
+            INSERTED.CreatedAt,
+            INSERTED.UpdatedAt
           WHERE UserID = @userId;
-          
-          SELECT * FROM EmergencyContacts WHERE UserID = @userId;
         `);
       
       return result.recordset[0];
@@ -91,8 +159,6 @@ class EmergencyContactService {
       await pool.request()
         .input('userId', sql.Int, userId)
         .query('DELETE FROM EmergencyContacts WHERE UserID = @userId');
-      
-      return true;
     } catch (error) {
       console.error('Error in deleteEmergencyContact:', error);
       throw error;

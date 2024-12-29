@@ -8,8 +8,8 @@
 @import './base/_utilities.css';
 
 /* Component Styles */
-@import './components/_sidebar.css';
 @import './components/_layout.css';
+@import './components/_sidebar.css';
 @import './components/_profile.css';
 @import './components/_auth.css';
 @import './components/_dashboard.css';

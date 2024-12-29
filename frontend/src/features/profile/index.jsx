@@ -1,22 +1,37 @@
 import React from 'react';
+import { ToastContainer } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
+import '../../styles/components/_profile.css';
 import Sidebar from '../Sidebar';
 import ProfileLayout from './ProfileLayout';
 import { SidebarProvider, useSidebar } from '../Sidebar/context/SidebarContext';
 import PageLayout from '../../components/Layout/PageLayout';
+import { useProfileForm } from './hooks/useProfileForm';
 
 const ProfileContainer = () => {
-  const user = JSON.parse(localStorage.getItem('user')) || {};
   const { isCollapsed } = useSidebar();
-
-  const handleSave = (formData) => {
-    // TODO: Implement save functionality
-    console.log('Saving profile:', formData);
-  };
+  const {
+    formData,
+    loading,
+    error,
+    handleChange,
+    handleSubmit,
+    handlePhotoChange,
+    handleDeletePhoto
+  } = useProfileForm();
 
   return (
     <PageLayout>
       <div className={`profile-content ${isCollapsed ? 'sidebar-collapsed' : ''}`}>
-        <ProfileLayout user={user} onSave={handleSave} />
+        <ProfileLayout 
+          formData={formData}
+          loading={loading}
+          error={error}
+          onPhotoChange={handlePhotoChange}
+          onDeletePhoto={handleDeletePhoto}
+          onChange={handleChange}
+          onSubmit={handleSubmit}
+        />
       </div>
     </PageLayout>
   );
@@ -28,6 +43,17 @@ const Profile = () => {
       <SidebarProvider>
         <Sidebar />
         <ProfileContainer />
+        <ToastContainer 
+          position="top-right"
+          autoClose={5000}
+          hideProgressBar={false}
+          newestOnTop
+          closeOnClick
+          rtl={false}
+          pauseOnFocusLoss
+          draggable
+          pauseOnHover
+        />
       </SidebarProvider>
     </div>
   );

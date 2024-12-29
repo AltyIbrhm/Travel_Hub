@@ -2,11 +2,13 @@ import React, { useEffect, useState, useRef } from 'react';
 import { Form, Toast } from 'react-bootstrap';
 import { FaUser, FaPhone, FaUserFriends, FaCheck } from 'react-icons/fa';
 
-export const EmergencyContactForm = ({ formData, handleChange, handleSubmit }) => {
+export const EmergencyContactForm = ({ formData, onChange, onSubmit }) => {
   const [isSaving, setIsSaving] = useState(false);
   const [showSaveToast, setShowSaveToast] = useState(false);
   const initialFormData = useRef(formData);
   const [hasChanges, setHasChanges] = useState(false);
+  const saveTimeoutRef = useRef(null);
+  const lastSaveAttemptRef = useRef(0);
 
   // Check for actual changes in form data
   useEffect(() => {
@@ -18,41 +20,67 @@ export const EmergencyContactForm = ({ formData, handleChange, handleSubmit }) =
 
   // Auto-save when form data changes
   useEffect(() => {
-    if (!hasChanges) return;
+    if (!hasChanges || isSaving) return;
+
+    // Clear any existing timeout
+    if (saveTimeoutRef.current) {
+      clearTimeout(saveTimeoutRef.current);
+    }
+
+    // Check if we should save based on rate limiting
+    const now = Date.now();
+    const timeSinceLastSave = now - lastSaveAttemptRef.current;
+    const MIN_SAVE_INTERVAL = 5000; // 5 seconds between saves
+
+    if (timeSinceLastSave < MIN_SAVE_INTERVAL) {
+      saveTimeoutRef.current = setTimeout(() => {
+        setHasChanges(true); // Trigger another save attempt
+      }, MIN_SAVE_INTERVAL - timeSinceLastSave);
+      return;
+    }
 
     setIsSaving(true);
-    const saveTimeout = setTimeout(() => {
-      const mockEvent = {
-        preventDefault: () => {},
-        target: { value: formData }
-      };
-      handleSubmit(mockEvent);
-      setIsSaving(false);
-      setShowSaveToast(true);
-      
-      // Hide toast after 3 seconds
-      setTimeout(() => setShowSaveToast(false), 3000);
+    lastSaveAttemptRef.current = now;
 
-      // Update initial form data after successful save
-      initialFormData.current = { ...formData };
+    saveTimeoutRef.current = setTimeout(async () => {
+      try {
+        if (onSubmit) {
+          await onSubmit(formData);
+        }
+        setShowSaveToast(true);
+        setTimeout(() => setShowSaveToast(false), 3000);
+      } catch (error) {
+        if (error.message?.includes('Too many emergency contact updates')) {
+          // Don't show error toast for rate limiting
+          console.warn('Rate limited, will retry later');
+        }
+      } finally {
+        setIsSaving(false);
+      }
     }, 1000);
 
     return () => {
-      clearTimeout(saveTimeout);
-      setIsSaving(false);
+      if (saveTimeoutRef.current) {
+        clearTimeout(saveTimeoutRef.current);
+      }
     };
-  }, [formData, handleSubmit, hasChanges]);
-
-  const handleFormSubmit = (e) => {
-    e.preventDefault();
-  };
+  }, [hasChanges, formData, onSubmit, isSaving]);
 
   const handlePhoneChange = (e) => {
-    let value = e.target.value;
+    let value = e.target.value.replace(/\D/g, '');
     
-    // Handle backspace and deletion
-    if (value.length < formData.emergencyPhone?.length) {
-      handleChange({
+    if (value.length === 0) {
+      value = '';
+    } else if (value.length <= 3) {
+      value = `(${value}`;
+    } else if (value.length <= 6) {
+      value = `(${value.slice(0, 3)}) ${value.slice(3)}`;
+    } else {
+      value = `(${value.slice(0, 3)}) ${value.slice(3, 6)}-${value.slice(6, 10)}`;
+    }
+
+    if (onChange) {
+      onChange({
         ...e,
         target: {
           ...e.target,
@@ -60,32 +88,7 @@ export const EmergencyContactForm = ({ formData, handleChange, handleSubmit }) =
           name: 'emergencyPhone'
         }
       });
-      return;
     }
-
-    // Remove all non-digits
-    value = value.replace(/\D/g, '');
-    
-    // Limit to 10 digits
-    if (value.length > 10) value = value.slice(0, 10);
-    
-    // Format the number
-    if (value.length >= 6) {
-      value = `(${value.slice(0, 3)}) ${value.slice(3, 6)}-${value.slice(6)}`;
-    } else if (value.length >= 3) {
-      value = `(${value.slice(0, 3)}) ${value.slice(3)}`;
-    } else if (value.length > 0) {
-      value = `(${value}`;
-    }
-
-    handleChange({
-      ...e,
-      target: {
-        ...e.target,
-        value,
-        name: 'emergencyPhone'
-      }
-    });
   };
 
   return (
@@ -102,13 +105,13 @@ export const EmergencyContactForm = ({ formData, handleChange, handleSubmit }) =
         </Toast>
       </div>
 
-      <Form className="profile-form" onSubmit={handleFormSubmit}>
+      <Form className="emergency-contact-form">
         <div className="profile-section">
           <h3 className="section-title">
             <FaUserFriends className="section-icon" />
             Emergency Contact Information
           </h3>
-          
+
           <div className="profile-form-row">
             <Form.Group className="profile-form-group">
               <label className="profile-label">
@@ -119,18 +122,17 @@ export const EmergencyContactForm = ({ formData, handleChange, handleSubmit }) =
                 type="text"
                 name="emergencyName"
                 value={formData.emergencyName}
-                onChange={handleChange}
+                onChange={onChange}
                 className="profile-input"
                 placeholder="Enter emergency contact name"
                 required
               />
-              <small className="field-help">Full name of your emergency contact</small>
             </Form.Group>
 
             <Form.Group className="profile-form-group">
               <label className="profile-label">
                 <FaPhone className="field-icon" />
-                Contact Phone Number
+                Contact Phone
               </label>
               <input
                 type="tel"
@@ -142,42 +144,33 @@ export const EmergencyContactForm = ({ formData, handleChange, handleSubmit }) =
                 maxLength="14"
                 required
               />
-              <small className="field-help">Phone number where they can be reached</small>
+              <small className="field-help">Format: (555) 123-4567</small>
             </Form.Group>
           </div>
 
-          <div className="profile-form-row">
-            <Form.Group className="profile-form-group">
-              <label className="profile-label">
-                <FaUserFriends className="field-icon" />
-                Relationship
-              </label>
-              <select
-                name="emergencyRelationship"
-                value={formData.emergencyRelationship}
-                onChange={handleChange}
-                className="profile-input"
-                required
-              >
-                <option value="">Select relationship</option>
-                <option value="Parent">Parent</option>
-                <option value="Spouse">Spouse</option>
-                <option value="Sibling">Sibling</option>
-                <option value="Friend">Friend</option>
-                <option value="Other">Other</option>
-              </select>
-              <small className="field-help">Your relationship with the emergency contact</small>
-            </Form.Group>
-          </div>
+          <Form.Group className="profile-form-group">
+            <label className="profile-label">
+              <FaUserFriends className="field-icon" />
+              Relationship
+            </label>
+            <select
+              name="emergencyRelationship"
+              value={formData.emergencyRelationship}
+              onChange={onChange}
+              className="profile-input"
+              required
+            >
+              <option value="">Select relationship</option>
+              <option value="Parent">Parent</option>
+              <option value="Spouse">Spouse</option>
+              <option value="Sibling">Sibling</option>
+              <option value="Child">Child</option>
+              <option value="Friend">Friend</option>
+              <option value="Other">Other</option>
+            </select>
+          </Form.Group>
         </div>
       </Form>
-
-      {isSaving && (
-        <div className="autosave-indicator">
-          <span className="saving-spinner"></span>
-          Saving changes...
-        </div>
-      )}
     </>
   );
 };
