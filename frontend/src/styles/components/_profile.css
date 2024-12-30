@@ -9,157 +9,157 @@
 .profile-content {
   flex: 1;
   padding: var(--spacing-xl);
-  margin-left: 240px; /* Width of sidebar */
+  margin-left: 50px; /* Reduced from 200px to 50px */
   transition: all var(--transition-speed) ease;
 }
 
 .profile-content.sidebar-collapsed {
-  margin-left: 80px;
+  margin-left: 0; /* Reduced from 60px to 0px */
 }
 
 /* Profile Header */
 .profile-header {
-  display: flex !important;
-  align-items: center !important;
-  gap: var(--spacing-xl) !important;
-  padding: var(--spacing-xl) !important;
-  background: var(--bg-primary) !important;
-  border-radius: var(--border-radius-lg) !important;
-  box-shadow: var(--shadow-sm) !important;
-  margin-bottom: var(--spacing-xl) !important;
-  position: relative !important;
-  border: 1px solid var(--border-color) !important;
-  width: 100% !important;
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-xl);
+  padding: var(--spacing-xl);
+  background: var(--bg-primary);
+  border-radius: var(--border-radius-lg);
+  box-shadow: var(--shadow-sm);
+  margin-bottom: var(--spacing-xl);
+  position: relative;
+  border: 1px solid var(--border-color);
+  width: 100%;
 }
 
 /* Profile Photo */
 .profile-photo-container {
-  position: relative !important;
-  width: 120px !important;
-  height: 120px !important;
-  flex-shrink: 0 !important;
-  margin: 0 !important;
-  border-radius: 50% !important;
-  overflow: hidden !important;
+  position: relative;
+  width: 120px;
+  height: 120px;
+  flex-shrink: 0;
+  margin: 0;
+  border-radius: 50%;
+  overflow: hidden;
 }
 
 .profile-photo {
-  position: relative !important;
-  width: 100% !important;
-  height: 100% !important;
-  border-radius: 50% !important;
-  overflow: hidden !important;
-  border: 3px solid var(--bg-primary) !important;
-  box-shadow: var(--shadow-sm) !important;
-  cursor: pointer !important;
-  transition: all var(--transition-speed) !important;
-  background-color: var(--bg-secondary) !important;
+  position: relative;
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  overflow: hidden;
+  border: 3px solid var(--bg-primary);
+  box-shadow: var(--shadow-sm);
+  cursor: pointer;
+  transition: all var(--transition-speed);
+  background-color: var(--bg-secondary);
 }
 
 .profile-photo:hover {
-  transform: translateY(-2px) !important;
-  box-shadow: var(--shadow-md) !important;
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md);
 }
 
 .profile-image {
-  width: 100% !important;
-  height: 100% !important;
-  object-fit: cover !important;
-  background-color: var(--bg-secondary) !important;
-  margin: 0 !important;
-  padding: 0 !important;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  background-color: var(--bg-secondary);
+  margin: 0;
+  padding: 0;
 }
 
 .photo-overlay {
-  position: absolute !important;
-  bottom: 0 !important;
-  left: 0 !important;
-  right: 0 !important;
-  background: rgba(0, 0, 0, 0.6) !important;
-  display: flex !important;
-  justify-content: center !important;
-  align-items: center !important;
-  gap: var(--spacing-sm) !important;
-  padding: var(--spacing-sm) !important;
-  opacity: 0 !important;
-  transition: opacity var(--transition-speed) !important;
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: rgba(0, 0, 0, 0.6);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: var(--spacing-sm);
+  padding: var(--spacing-sm);
+  opacity: 0;
+  transition: opacity var(--transition-speed);
 }
 
 .profile-photo:hover .photo-overlay {
-  opacity: 1 !important;
+  opacity: 1;
 }
 
 /* Override Bootstrap button styles */
 .photo-button.btn-link {
-  background: none !important;
-  border: none !important;
-  padding: var(--spacing-xs) !important;
-  color: white !important;
-  border-radius: var(--border-radius-sm) !important;
-  cursor: pointer !important;
-  transition: all var(--transition-speed) !important;
-  display: flex !important;
-  align-items: center !important;
-  justify-content: center !important;
-  font-size: var(--font-size-lg) !important;
-  text-decoration: none !important;
-  margin: 0 !important;
-  min-width: auto !important;
-  line-height: 1 !important;
+  background: none;
+  border: none;
+  padding: var(--spacing-xs);
+  color: white;
+  border-radius: var(--border-radius-sm);
+  cursor: pointer;
+  transition: all var(--transition-speed);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: var(--font-size-lg);
+  text-decoration: none;
+  margin: 0;
+  min-width: auto;
+  line-height: 1;
 }
 
 .photo-button.btn-link:hover {
-  background: rgba(255, 255, 255, 0.2) !important;
-  transform: scale(1.1) !important;
-  color: white !important;
+  background: rgba(255, 255, 255, 0.2);
+  transform: scale(1.1);
+  color: white;
 }
 
 .photo-button.btn-link.delete {
-  color: var(--danger-color) !important;
+  color: var(--danger-color);
 }
 
 .photo-button.btn-link:disabled {
-  opacity: 0.5 !important;
-  cursor: not-allowed !important;
-  pointer-events: none !important;
+  opacity: 0.5;
+  cursor: not-allowed;
+  pointer-events: none;
 }
 
 .photo-loading {
-  position: absolute !important;
-  top: 0 !important;
-  left: 0 !important;
-  right: 0 !important;
-  bottom: 0 !important;
-  background: rgba(255, 255, 255, 0.8) !important;
-  display: flex !important;
-  justify-content: center !important;
-  align-items: center !important;
-  border-radius: 50% !important;
-  z-index: 1 !important;
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(255, 255, 255, 0.8);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  border-radius: 50%;
+  z-index: 1;
 }
 
 /* Profile Info */
 .profile-info {
-  flex: 1 !important;
-  margin: 0 !important;
-  padding: 0 !important;
+  flex: 1;
+  margin: 0;
+  padding: 0;
 }
 
 .profile-info h2 {
-  margin: 0 !important;
-  color: var(--text-primary) !important;
-  font-size: var(--font-size-xl) !important;
-  font-weight: 600 !important;
-  line-height: 1.2 !important;
-  padding: 0 !important;
+  margin: 0;
+  color: var(--text-primary);
+  font-size: var(--font-size-xl);
+  font-weight: 600;
+  line-height: 1.2;
+  padding: 0;
 }
 
 .profile-info .text-muted {
-  margin: var(--spacing-xs) 0 0 !important;
-  color: var(--text-secondary) !important;
-  font-size: var(--font-size-md) !important;
-  padding: 0 !important;
-  display: block !important;
+  margin: var(--spacing-xs) 0 0;
+  color: var(--text-secondary);
+  font-size: var(--font-size-md);
+  padding: 0;
+  display: block;
 }
 
 /* Profile Tabs */
@@ -368,26 +368,27 @@
   }
 
   .profile-header {
-    flex-direction: column !important;
-    text-align: center !important;
-    padding: var(--spacing-lg) !important;
-    gap: var(--spacing-lg) !important;
+    flex-direction: column;
+    text-align: center;
+    padding: var(--spacing-lg);
   }
 
   .profile-photo-container {
-    margin: 0 auto !important;
+    width: 100px;
+    height: 100px;
   }
 
   .profile-info {
-    text-align: center !important;
+    text-align: center;
   }
 
   .profile-info h2 {
-    font-size: var(--font-size-lg) !important;
+    font-size: var(--font-size-lg);
   }
 
   .nav-tabs {
     flex-wrap: wrap;
+    justify-content: center;
   }
 
   .nav-link {
@@ -425,15 +426,15 @@
 
 /* Profile not found message */
 .profile-not-found {
-  padding: var(--spacing-md) !important;
-  margin: var(--spacing-md) 0 !important;
-  background-color: var(--danger-color) !important;
-  color: white !important;
-  border-radius: var(--border-radius-md) !important;
-  text-align: center !important;
-  font-weight: 500 !important;
-  opacity: 0.9 !important;
-  border: none !important;
+  padding: var(--spacing-md);
+  margin: var(--spacing-md) 0;
+  background-color: var(--danger-color);
+  color: white;
+  border-radius: var(--border-radius-md);
+  text-align: center;
+  font-weight: 500;
+  opacity: 0.9;
+  border: none;
 }
 
 /* Profile Stats */
@@ -688,7 +689,7 @@
 /* Remove autosave indicator and saving spinner */
 .autosave-indicator,
 .saving-spinner {
-  display: none !important;
+  display: none;
 }
 
 /* Profile Section */
