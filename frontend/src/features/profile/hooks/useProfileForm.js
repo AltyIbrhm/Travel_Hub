@@ -44,7 +44,7 @@ export const useProfileForm = () => {
             lastName: userLastName || '',
             email: userEmail || '',
             phoneNumber: '',
-            dateOfBirth: '',
+            dateOfBirth: null,
             language: 'English',
             address: ''
           });
@@ -56,7 +56,9 @@ export const useProfileForm = () => {
               lastName: response.profile.name.last || userLastName || '',
               email: response.profile.contact.email || userEmail || '',
               phoneNumber: response.profile.contact.phone || '',
-              dateOfBirth: response.profile.dateOfBirth || '',
+              dateOfBirth: response.profile.dateOfBirth && 
+                          response.profile.dateOfBirth !== '1970-01-01' ? 
+                          formatDateForUI(response.profile.dateOfBirth) : '',
               language: response.profile.preferences.language || 'English',
               address: response.profile.address || '',
               profilePicture: response.profile.avatar || null
@@ -74,7 +76,9 @@ export const useProfileForm = () => {
           lastName: data.profile.name.last || userLastName || '',
           email: data.profile.contact.email || userEmail || '',
           phoneNumber: data.profile.contact.phone || '',
-          dateOfBirth: data.profile.dateOfBirth || '',
+          dateOfBirth: data.profile.dateOfBirth && 
+                      data.profile.dateOfBirth !== '1970-01-01' ? 
+                      formatDateForUI(data.profile.dateOfBirth) : '',
           language: data.profile.preferences.language || 'English',
           address: data.profile.address || '',
           profilePicture: data.profile.avatar || null,
@@ -113,15 +117,113 @@ export const useProfileForm = () => {
 
   // Validate date format
   const isValidDate = (date) => {
-    return /^\d{4}-\d{2}-\d{2}$/.test(date) || /^\d{2}\/\d{2}\/\d{4}$/.test(date);
+    // Allow empty date
+    if (!date || date.trim() === '') {
+      return true;
+    }
+    // Accept both MM/DD/YYYY and YYYY-MM-DD formats
+    const mmddyyyyRegex = /^(0[1-9]|1[0-2])\/(0[1-9]|[12]\d|3[01])\/\d{4}$/;
+    const yyyymmddRegex = /^\d{4}-(0[1-9]|1[0-2])-(0[1-9]|[12]\d|3[01])$/;
+    return mmddyyyyRegex.test(date) || yyyymmddRegex.test(date);
+  };
+
+  // Convert date to backend format (YYYY-MM-DD)
+  const formatDateForBackend = (date) => {
+    if (!date) return '';
+    
+    // If already in YYYY-MM-DD format
+    if (/^\d{4}-\d{2}-\d{2}$/.test(date)) {
+      const [year, month, day] = date.split('-');
+      return `${year}-${month}-${day}`;
+    }
+
+    // Convert from DD/MM/YYYY to YYYY-MM-DD
+    const [day, month, year] = date.split('/');
+    return `${year}-${month}-${day}`;
+  };
+
+  // Convert date to UI format (DD/MM/YYYY)
+  const formatDateForUI = (date) => {
+    if (!date || date === '1970-01-01' || date === '0000-00-00') {
+      return '';
+    }
+
+    // If in YYYY-MM-DD format, convert to DD/MM/YYYY
+    if (/^\d{4}-\d{2}-\d{2}$/.test(date)) {
+      const [year, month, day] = date.split('-');
+      // Don't format if it's the epoch date
+      if (year === '1970' && month === '01' && day === '01') {
+        return '';
+      }
+      return `${day}/${month}/${year}`;
+    }
+
+    // If already in DD/MM/YYYY format, return as is
+    if (/^\d{2}\/\d{2}\/\d{4}$/.test(date)) {
+      const [day, month, year] = date.split('/');
+      // Don't format if it's the epoch date
+      if (year === '1970' && month === '01' && day === '01') {
+        return '';
+      }
+      return date;
+    }
+
+    return '';
   };
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setFormData(prevData => ({
-      ...prevData,
-      [name]: value
-    }));
+    
+    // Special handling for date input
+    if (name === 'dateOfBirth') {
+      // Handle clearing the field
+      if (!value || value === '') {
+        setFormData(prevData => ({
+          ...prevData,
+          [name]: ''
+        }));
+        
+        // Trigger save when clearing the date
+        saveTimeoutRef.current = setTimeout(() => {
+          handleSubmit({ ...formData, [name]: '' });
+        }, 1000);
+        return;
+      }
+
+      // Handle backspace/deletion
+      if (value.length < (formData.dateOfBirth || '').length) {
+        // Allow deletion by updating with shorter value
+        setFormData(prevData => ({
+          ...prevData,
+          [name]: value
+        }));
+        return;
+      }
+
+      // Format the date as user types
+      let formattedDate = value.replace(/\D/g, ''); // Remove non-digits
+      if (formattedDate.length > 8) formattedDate = formattedDate.substr(0, 8);
+      
+      // Add slashes as user types (DD/MM/YYYY)
+      if (formattedDate.length >= 4) {
+        formattedDate = formattedDate.substr(0, 2) + '/' + 
+                       formattedDate.substr(2, 2) + '/' + 
+                       formattedDate.substr(4);
+      } else if (formattedDate.length >= 2) {
+        formattedDate = formattedDate.substr(0, 2) + '/' + 
+                       formattedDate.substr(2);
+      }
+
+      setFormData(prevData => ({
+        ...prevData,
+        [name]: formattedDate
+      }));
+    } else {
+      setFormData(prevData => ({
+        ...prevData,
+        [name]: value
+      }));
+    }
 
     // Clear any existing timeout
     if (saveTimeoutRef.current) {
@@ -133,13 +235,17 @@ export const useProfileForm = () => {
       return; // Don't save incomplete phone numbers
     }
 
-    if (name === 'dateOfBirth' && !isValidDate(value)) {
-      return; // Don't save incomplete dates
+    // Only save date if it's empty or valid
+    if (name === 'dateOfBirth') {
+      if (value && !isValidDate(value)) {
+        return; // Don't save incomplete dates unless field is being cleared
+      }
     }
 
     // Debounce the save for 1 second after typing stops
     saveTimeoutRef.current = setTimeout(() => {
-      handleSubmit({ ...formData, [name]: value });
+      const updatedData = { ...formData, [name]: value };
+      handleSubmit(updatedData);
     }, 1000);
   };
 
@@ -193,6 +299,31 @@ export const useProfileForm = () => {
     }
   };
 
+  // Add validation function
+  const validateForm = (data) => {
+    const errors = {};
+
+    // Required fields
+    if (!data.firstName?.trim()) {
+      errors.firstName = 'First name is required';
+    }
+
+    if (!data.lastName?.trim()) {
+      errors.lastName = 'Last name is required';
+    }
+
+    // Optional fields with format validation
+    if (data.phoneNumber && !isValidPhone(data.phoneNumber)) {
+      errors.phoneNumber = 'Please enter a valid phone number (XXX) XXX-XXXX';
+    }
+
+    if (data.dateOfBirth && !isValidDate(data.dateOfBirth)) {
+      errors.dateOfBirth = 'Please enter a valid date (DD/MM/YYYY)';
+    }
+
+    return errors;
+  };
+
   const handleSubmit = async (data) => {
     // If data is an event, prevent default and use formData
     if (data && data.preventDefault) {
@@ -202,14 +333,15 @@ export const useProfileForm = () => {
     
     setError(null);
 
-    // Validate required fields
-    if (data.phoneNumber && !isValidPhone(data.phoneNumber)) {
-      setError('Please enter a complete phone number');
-      return;
-    }
-
-    if (data.dateOfBirth && !isValidDate(data.dateOfBirth)) {
-      setError('Please enter a valid date');
+    // Validate form
+    const validationErrors = validateForm(data);
+    if (Object.keys(validationErrors).length > 0) {
+      // Show first error in the error state
+      setError(Object.values(validationErrors)[0]);
+      // Show all errors as toasts
+      Object.values(validationErrors).forEach(error => {
+        toast.error(error);
+      });
       return;
     }
 
@@ -227,26 +359,31 @@ export const useProfileForm = () => {
         firstName: data.firstName,
         lastName: data.lastName,
         email: data.email,
-        phoneNumber: data.phoneNumber,
-        dateOfBirth: data.dateOfBirth,
-        language: data.language,
-        address: data.address
+        phoneNumber: data.phoneNumber || '',
+        dateOfBirth: data.dateOfBirth ? formatDateForBackend(data.dateOfBirth) : null,
+        language: data.language || 'English',
+        address: data.address || ''
       };
       
       console.log('Sending profile update:', profileData);
       const profileResponse = await profileService.updateProfile(profileData);
-      console.log('Profile update response:', profileResponse);
-
+      
       if (profileResponse) {
+        // Update the form data with the formatted date from the response
+        setFormData(prev => ({
+          ...prev,
+          ...profileResponse,
+          dateOfBirth: profileResponse.dateOfBirth ? formatDateForUI(profileResponse.dateOfBirth) : ''
+        }));
         toast.success('Profile updated successfully');
       }
 
       // Update emergency contact if needed
       if (data.emergencyName || data.emergencyPhone || data.emergencyRelationship) {
         const emergencyData = {
-          emergencyName: data.emergencyName,
-          emergencyPhone: data.emergencyPhone,
-          emergencyRelationship: data.emergencyRelationship
+          emergencyName: data.emergencyName || '',
+          emergencyPhone: data.emergencyPhone || '',
+          emergencyRelationship: data.emergencyRelationship || ''
         };
         await profileService.updateEmergencyContact(emergencyData);
       }
