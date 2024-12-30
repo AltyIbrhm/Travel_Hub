@@ -61,10 +61,7 @@ export const profileService = {
   // Update profile
   async updateProfile(profileData) {
     try {
-      console.log('Profile service: sending update request', profileData); // Debug log
-      
       const response = await api.put('/profile', profileData);
-      console.log('Profile service: received response', response.data); // Debug log
       
       if (!response.data) {
         throw new Error('No response data received from server');
@@ -72,8 +69,6 @@ export const profileService = {
 
       return response.data;
     } catch (error) {
-      console.error('Profile service: update error', error.response || error);
-      
       // Handle specific error cases
       if (error.response?.status === 401) {
         throw new Error('Please log in again to update your profile');
@@ -90,10 +85,34 @@ export const profileService = {
   // Update emergency contact
   async updateEmergencyContact(contactData) {
     try {
-      const response = await api.put('/profile/emergency-contact', contactData);
+      // Format phone number to match required format
+      const formattedPhone = contactData.emergencyPhone.replace(/(\d{3})(\d{3})(\d{4})/, '($1) $2-$3');
+
+      // Send data in the format expected by backend validation
+      const requestData = {
+        emergencyName: contactData.emergencyName,
+        emergencyPhone: formattedPhone,
+        emergencyRelationship: contactData.emergencyRelationship
+      };
+
+      const response = await api.put('/profile/emergency-contact', requestData);
+      
+      if (!response.data) {
+        throw new Error('No response data received');
+      }
+
       return response.data;
     } catch (error) {
-      throw this.handleError(error);
+      if (error.response?.status === 400) {
+        const errorMessage = error.response.data?.message || 'Invalid emergency contact data';
+        throw new Error(errorMessage);
+      } else if (error.response?.status === 500) {
+        throw new Error('Server error. Please try again later.');
+      } else if (!error.response) {
+        throw new Error('Cannot connect to server. Please check your internet connection');
+      }
+      
+      throw error;
     }
   },
 

@@ -21,6 +21,7 @@ export const useProfileForm = () => {
   const [error, setError] = useState(null);
   const [photoFile, setPhotoFile] = useState(null);
   const saveTimeoutRef = useRef(null);
+  const lastUpdateTimeRef = useRef(0);
 
   // Load profile data
   useEffect(() => {
@@ -174,79 +175,46 @@ export const useProfileForm = () => {
   const handleChange = (e) => {
     const { name, value } = e.target;
     
-    // Special handling for date input
-    if (name === 'dateOfBirth') {
-      // Handle clearing the field
-      if (!value || value === '') {
-        setFormData(prevData => ({
-          ...prevData,
-          [name]: ''
-        }));
-        
-        // Trigger save when clearing the date
-        saveTimeoutRef.current = setTimeout(() => {
-          handleSubmit({ ...formData, [name]: '' });
-        }, 1000);
-        return;
-      }
-
-      // Handle backspace/deletion
-      if (value.length < (formData.dateOfBirth || '').length) {
-        // Allow deletion by updating with shorter value
-        setFormData(prevData => ({
-          ...prevData,
-          [name]: value
-        }));
-        return;
-      }
-
-      // Format the date as user types
-      let formattedDate = value.replace(/\D/g, ''); // Remove non-digits
-      if (formattedDate.length > 8) formattedDate = formattedDate.substr(0, 8);
-      
-      // Add slashes as user types (DD/MM/YYYY)
-      if (formattedDate.length >= 4) {
-        formattedDate = formattedDate.substr(0, 2) + '/' + 
-                       formattedDate.substr(2, 2) + '/' + 
-                       formattedDate.substr(4);
-      } else if (formattedDate.length >= 2) {
-        formattedDate = formattedDate.substr(0, 2) + '/' + 
-                       formattedDate.substr(2);
-      }
-
-      setFormData(prevData => ({
-        ...prevData,
-        [name]: formattedDate
-      }));
-    } else {
-      setFormData(prevData => ({
-        ...prevData,
-        [name]: value
-      }));
-    }
-
     // Clear any existing timeout
     if (saveTimeoutRef.current) {
       clearTimeout(saveTimeoutRef.current);
     }
 
-    // For phone and date fields, only save if they're complete and valid
-    if (name === 'phoneNumber' && !isValidPhone(value)) {
-      return; // Don't save incomplete phone numbers
+    setFormData(prevData => ({
+      ...prevData,
+      [name]: value
+    }));
+
+    // For emergency contact fields, only update when the field loses focus
+    if (name.startsWith('emergency')) {
+      return; // Don't auto-save emergency contact fields
     }
 
-    // Only save date if it's empty or valid
-    if (name === 'dateOfBirth') {
-      if (value && !isValidDate(value)) {
-        return; // Don't save incomplete dates unless field is being cleared
-      }
-    }
-
-    // Debounce the save for 1 second after typing stops
+    // Debounce other field updates
     saveTimeoutRef.current = setTimeout(() => {
       const updatedData = { ...formData, [name]: value };
       handleSubmit(updatedData);
     }, 1000);
+  };
+
+  const handleBlur = (e) => {
+    const { name } = e.target;
+    
+    // Only handle emergency contact fields on blur
+    if (name.startsWith('emergency')) {
+      const now = Date.now();
+      const timeSinceLastUpdate = now - lastUpdateTimeRef.current;
+      
+      // If less than 30 seconds have passed, show a message
+      if (timeSinceLastUpdate < 30000) {
+        const remainingTime = Math.ceil((30000 - timeSinceLastUpdate) / 1000);
+        toast.info(`Please wait ${remainingTime} seconds before updating emergency contact`);
+        return;
+      }
+
+      const updatedData = { ...formData };
+      handleEmergencyContactUpdate(updatedData);
+    }
   };
 
   // Cleanup timeout on unmount
@@ -395,11 +363,73 @@ export const useProfileForm = () => {
     }
   };
 
+  const handleEmergencyContactUpdate = async (data) => {
+    try {
+      // Check if we're already loading
+      if (loading) {
+        return;
+      }
+
+      setLoading(true);
+      setError(null);
+
+      // Get the values from the form data
+      const name = data.emergencyName?.trim() || '';
+      const phone = data.emergencyPhone?.trim() || '';
+      const relationship = data.emergencyRelationship?.trim() || '';
+
+      // Only proceed if we have at least one non-empty value
+      if (!name && !phone && !relationship) {
+        return;
+      }
+
+      // Structure the data to match backend expectations
+      const emergencyContactData = {
+        contact: {
+          name,
+          phone,
+          relationship
+        }
+      };
+
+      const response = await profileService.updateEmergencyContact(emergencyContactData);
+      
+      if (response && response.contact) {
+        // Update last update time
+        lastUpdateTimeRef.current = Date.now();
+        
+        // Update local state with the response data
+        setFormData(prev => ({
+          ...prev,
+          emergencyName: response.contact.name || '',
+          emergencyPhone: response.contact.phone || '',
+          emergencyRelationship: response.contact.relationship || ''
+        }));
+        toast.success('Emergency contact updated successfully');
+      }
+    } catch (error) {
+      console.error('Emergency contact update error:', error);
+      
+      // Handle rate limiting error specifically
+      if (error.response?.status === 429) {
+        const message = 'Too many updates. Please wait 30 minutes before trying again.';
+        setError(message);
+        toast.error(message);
+      } else {
+        setError(error.message || 'Failed to update emergency contact');
+        toast.error(error.message || 'Failed to update emergency contact');
+      }
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return {
     formData,
     loading,
     error,
     handleChange,
+    handleBlur,
     handleSubmit,
     handlePhotoChange,
     handleDeletePhoto,

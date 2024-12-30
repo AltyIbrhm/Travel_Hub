@@ -1,70 +1,45 @@
-import React, { useEffect, useState, useRef } from 'react';
-import { Form, Toast } from 'react-bootstrap';
-import { FaUser, FaPhone, FaUserFriends, FaCheck } from 'react-icons/fa';
+import React, { useState, useEffect } from 'react';
+import { Form } from 'react-bootstrap';
+import { FaUser, FaPhone, FaUserFriends } from 'react-icons/fa';
+import { profileService } from '../services/profileService';
+import { toast } from 'react-toastify';
 
-export const EmergencyContactForm = ({ formData, onChange, onSubmit }) => {
-  const [isSaving, setIsSaving] = useState(false);
-  const [showSaveToast, setShowSaveToast] = useState(false);
-  const initialFormData = useRef(formData);
-  const [hasChanges, setHasChanges] = useState(false);
-  const saveTimeoutRef = useRef(null);
-  const lastSaveAttemptRef = useRef(0);
+export const EmergencyContactForm = ({ formData, onChange }) => {
+  const [localFormData, setLocalFormData] = useState({
+    emergencyName: formData.emergencyName || '',
+    emergencyPhone: formData.emergencyPhone || '',
+    emergencyRelationship: formData.emergencyRelationship || ''
+  });
 
-  // Check for actual changes in form data
+  const [loading, setLoading] = useState(false);
+
+  // Update local form data when props change
   useEffect(() => {
-    const hasFormChanged = Object.keys(formData).some(
-      key => formData[key] !== initialFormData.current[key]
-    );
-    setHasChanges(hasFormChanged);
+    setLocalFormData({
+      emergencyName: formData.emergencyName || '',
+      emergencyPhone: formData.emergencyPhone || '',
+      emergencyRelationship: formData.emergencyRelationship || ''
+    });
   }, [formData]);
 
-  // Auto-save when form data changes
-  useEffect(() => {
-    if (!hasChanges || isSaving) return;
-
-    // Clear any existing timeout
-    if (saveTimeoutRef.current) {
-      clearTimeout(saveTimeoutRef.current);
-    }
-
-    // Check if we should save based on rate limiting
-    const now = Date.now();
-    const timeSinceLastSave = now - lastSaveAttemptRef.current;
-    const MIN_SAVE_INTERVAL = 5000; // 5 seconds between saves
-
-    if (timeSinceLastSave < MIN_SAVE_INTERVAL) {
-      saveTimeoutRef.current = setTimeout(() => {
-        setHasChanges(true); // Trigger another save attempt
-      }, MIN_SAVE_INTERVAL - timeSinceLastSave);
-      return;
-    }
-
-    setIsSaving(true);
-    lastSaveAttemptRef.current = now;
-
-    saveTimeoutRef.current = setTimeout(async () => {
-      try {
-        if (onSubmit) {
-          await onSubmit(formData);
-        }
-        setShowSaveToast(true);
-        setTimeout(() => setShowSaveToast(false), 3000);
-      } catch (error) {
-        if (error.message?.includes('Too many emergency contact updates')) {
-          // Don't show error toast for rate limiting
-          console.warn('Rate limited, will retry later');
-        }
-      } finally {
-        setIsSaving(false);
-      }
-    }, 1000);
-
-    return () => {
-      if (saveTimeoutRef.current) {
-        clearTimeout(saveTimeoutRef.current);
-      }
+  const handleLocalChange = (e) => {
+    const { name, value } = e.target;
+    const updatedData = {
+      ...localFormData,
+      [name]: value
     };
-  }, [hasChanges, formData, onSubmit, isSaving]);
+    
+    setLocalFormData(updatedData);
+
+    if (onChange) {
+      onChange({
+        target: {
+          name,
+          value
+        }
+      });
+    }
+  };
 
   const handlePhoneChange = (e) => {
     let value = e.target.value.replace(/\D/g, '');
@@ -79,99 +54,138 @@ export const EmergencyContactForm = ({ formData, onChange, onSubmit }) => {
       value = `(${value.slice(0, 3)}) ${value.slice(3, 6)}-${value.slice(6, 10)}`;
     }
 
-    if (onChange) {
-      onChange({
-        ...e,
-        target: {
-          ...e.target,
-          value,
-          name: 'emergencyPhone'
+    handleLocalChange({
+      target: {
+        name: 'emergencyPhone',
+        value
+      }
+    });
+  };
+
+  const handleSubmit = async () => {
+    if (loading) return;
+
+    // Validate required fields
+    if (!localFormData.emergencyName?.trim()) {
+      toast.error('Emergency contact name is required');
+      return;
+    }
+
+    if (!localFormData.emergencyPhone?.trim()) {
+      toast.error('Emergency contact phone is required');
+      return;
+    }
+
+    if (!localFormData.emergencyRelationship) {
+      toast.error('Please select a relationship');
+      return;
+    }
+
+    try {
+      setLoading(true);
+      
+      // Format phone number to remove formatting characters
+      const formattedPhone = localFormData.emergencyPhone.replace(/[^0-9]/g, '');
+      
+      const contactData = {
+        emergencyName: localFormData.emergencyName.trim(),
+        emergencyPhone: formattedPhone,
+        emergencyRelationship: localFormData.emergencyRelationship
+      };
+
+      const response = await profileService.updateEmergencyContact(contactData);
+      
+      if (response) {
+        toast.success('Emergency contact updated successfully');
+        // Update parent form data if needed
+        if (onChange) {
+          Object.entries(contactData).forEach(([key, value]) => {
+            // If it's the phone number, use the formatted display version
+            const displayValue = key === 'emergencyPhone' ? localFormData.emergencyPhone : value;
+            onChange({
+              target: { name: key, value: displayValue }
+            });
+          });
         }
-      });
+      }
+    } catch (error) {
+      toast.error(error.message || 'Failed to update emergency contact');
+    } finally {
+      setLoading(false);
     }
   };
 
+  const handleBlur = () => {
+    handleSubmit();
+  };
+
   return (
-    <>
-      <div className="autosave-toast-container">
-        <Toast 
-          show={showSaveToast} 
-          onClose={() => setShowSaveToast(false)}
-          className="autosave-toast"
-        >
-          <Toast.Body>
-            <FaCheck className="toast-icon" /> Changes saved successfully
-          </Toast.Body>
-        </Toast>
-      </div>
+    <Form className="emergency-contact-form">
+      <div className="profile-section">
+        <h3 className="section-title">
+          <FaUserFriends className="section-icon" />
+          Emergency Contact Information
+        </h3>
 
-      <Form className="emergency-contact-form">
-        <div className="profile-section">
-          <h3 className="section-title">
-            <FaUserFriends className="section-icon" />
-            Emergency Contact Information
-          </h3>
-
-          <div className="profile-form-row">
-            <Form.Group className="profile-form-group">
-              <label className="profile-label">
-                <FaUser className="field-icon" />
-                Contact Name
-              </label>
-              <input
-                type="text"
-                name="emergencyName"
-                value={formData.emergencyName}
-                onChange={onChange}
-                className="profile-input"
-                placeholder="Enter emergency contact name"
-                required
-              />
-            </Form.Group>
-
-            <Form.Group className="profile-form-group">
-              <label className="profile-label">
-                <FaPhone className="field-icon" />
-                Contact Phone
-              </label>
-              <input
-                type="tel"
-                name="emergencyPhone"
-                value={formData.emergencyPhone}
-                onChange={handlePhoneChange}
-                className="profile-input"
-                placeholder="(555) 123-4567"
-                maxLength="14"
-                required
-              />
-              <small className="field-help">Format: (555) 123-4567</small>
-            </Form.Group>
-          </div>
+        <div className="profile-form-row">
+          <Form.Group className="profile-form-group">
+            <label className="profile-label">
+              <FaUser className="field-icon" />
+              Contact Name
+            </label>
+            <input
+              type="text"
+              name="emergencyName"
+              value={localFormData.emergencyName}
+              onChange={handleLocalChange}
+              onBlur={handleBlur}
+              className="profile-input"
+              placeholder="Enter emergency contact name"
+            />
+          </Form.Group>
 
           <Form.Group className="profile-form-group">
             <label className="profile-label">
-              <FaUserFriends className="field-icon" />
-              Relationship
+              <FaPhone className="field-icon" />
+              Contact Phone
             </label>
-            <select
-              name="emergencyRelationship"
-              value={formData.emergencyRelationship}
-              onChange={onChange}
+            <input
+              type="tel"
+              name="emergencyPhone"
+              value={localFormData.emergencyPhone}
+              onChange={handlePhoneChange}
+              onBlur={handleBlur}
               className="profile-input"
-              required
-            >
-              <option value="">Select relationship</option>
-              <option value="Parent">Parent</option>
-              <option value="Spouse">Spouse</option>
-              <option value="Sibling">Sibling</option>
-              <option value="Child">Child</option>
-              <option value="Friend">Friend</option>
-              <option value="Other">Other</option>
-            </select>
+              placeholder="(555) 123-4567"
+              maxLength="14"
+            />
+            <small className="field-help">Format: (555) 123-4567</small>
           </Form.Group>
         </div>
-      </Form>
-    </>
+
+        <Form.Group className="profile-form-group">
+          <label className="profile-label">
+            <FaUserFriends className="field-icon" />
+            Relationship
+          </label>
+          <select
+            name="emergencyRelationship"
+            value={localFormData.emergencyRelationship}
+            onChange={handleLocalChange}
+            onBlur={handleBlur}
+            className="profile-input"
+          >
+            <option value="">Select relationship</option>
+            <option value="Parent">Parent</option>
+            <option value="Spouse">Spouse</option>
+            <option value="Sibling">Sibling</option>
+            <option value="Child">Child</option>
+            <option value="Friend">Friend</option>
+            <option value="Other">Other</option>
+          </select>
+        </Form.Group>
+      </div>
+    </Form>
   );
 };
 
