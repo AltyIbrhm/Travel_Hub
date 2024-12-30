@@ -347,7 +347,6 @@ export const useProfileForm = () => {
 
     try {
       setLoading(true);
-      toast.info('Saving changes...'); // Show saving notification
 
       // Upload photo if selected
       if (photoFile) {
@@ -365,7 +364,6 @@ export const useProfileForm = () => {
         address: data.address || ''
       };
       
-      console.log('Sending profile update:', profileData);
       const profileResponse = await profileService.updateProfile(profileData);
       
       if (profileResponse) {
