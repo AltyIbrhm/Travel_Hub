@@ -111,6 +111,9 @@ export const useProfileForm = () => {
       ...prevData,
       [name]: value
     }));
+
+    // Trigger auto-save after change
+    handleSubmit({ ...formData, [name]: value });
   };
 
   const handlePhotoChange = (file) => {
@@ -162,9 +165,11 @@ export const useProfileForm = () => {
     }
     
     setError(null);
+    console.log('Submitting profile data:', data); // Debug log
 
     try {
       setLoading(true);
+      toast.info('Saving changes...'); // Show saving notification
 
       // Upload photo if selected
       if (photoFile) {
@@ -181,20 +186,29 @@ export const useProfileForm = () => {
         language: data.language,
         address: data.address
       };
-      await profileService.updateProfile(profileData);
+      
+      console.log('Sending profile update:', profileData); // Debug log
+      const profileResponse = await profileService.updateProfile(profileData);
+      console.log('Profile update response:', profileResponse); // Debug log
+
+      if (profileResponse) {
+        toast.success('Profile updated successfully');
+      }
 
       // Update emergency contact
-      const emergencyData = {
-        emergencyName: data.emergencyName,
-        emergencyPhone: data.emergencyPhone,
-        emergencyRelationship: data.emergencyRelationship
-      };
-      await profileService.updateEmergencyContact(emergencyData);
+      if (data.emergencyName || data.emergencyPhone || data.emergencyRelationship) {
+        const emergencyData = {
+          emergencyName: data.emergencyName,
+          emergencyPhone: data.emergencyPhone,
+          emergencyRelationship: data.emergencyRelationship
+        };
+        await profileService.updateEmergencyContact(emergencyData);
+      }
 
-      toast.success('Profile updated successfully');
     } catch (error) {
-      setError(error.message);
-      toast.error('Failed to update profile');
+      console.error('Profile update error:', error);
+      setError(error.message || 'Failed to update profile');
+      toast.error(error.message || 'Failed to update profile');
       
       if (error.errors) {
         error.errors.forEach(err => {

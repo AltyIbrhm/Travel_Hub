@@ -61,9 +61,28 @@ export const profileService = {
   // Update profile
   async updateProfile(profileData) {
     try {
+      console.log('Profile service: sending update request', profileData); // Debug log
+      
       const response = await api.put('/profile', profileData);
+      console.log('Profile service: received response', response.data); // Debug log
+      
+      if (!response.data) {
+        throw new Error('No response data received from server');
+      }
+
       return response.data;
     } catch (error) {
+      console.error('Profile service: update error', error.response || error);
+      
+      // Handle specific error cases
+      if (error.response?.status === 401) {
+        throw new Error('Please log in again to update your profile');
+      } else if (error.response?.status === 400) {
+        throw new Error(error.response.data.message || 'Invalid profile data');
+      } else if (!error.response) {
+        throw new Error('Cannot connect to server. Please check your internet connection');
+      }
+      
       throw this.handleError(error);
     }
   },
