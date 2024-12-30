@@ -24,7 +24,6 @@ class CacheService {
       const cached = await redis.get(`profile:${userId}`);
       return cached ? JSON.parse(cached) : null;
     } catch (error) {
-      console.error('Cache error (getProfile):', error);
       return null;
     }
   }
@@ -37,7 +36,8 @@ class CacheService {
     try {
       await redis.setex(`profile:${userId}`, CACHE_TTL.PROFILE, JSON.stringify(profile));
     } catch (error) {
-      console.error('Cache error (setProfile):', error);
+      // Silently fail and use memory cache as fallback
+      memoryCache.profiles.set(userId, profile);
     }
   }
 
@@ -49,7 +49,6 @@ class CacheService {
       const cached = await redis.get(`emergency:${userId}`);
       return cached ? JSON.parse(cached) : null;
     } catch (error) {
-      console.error('Cache error (getEmergencyContact):', error);
       return null;
     }
   }
@@ -62,7 +61,8 @@ class CacheService {
     try {
       await redis.setex(`emergency:${userId}`, CACHE_TTL.EMERGENCY, JSON.stringify(contact));
     } catch (error) {
-      console.error('Cache error (setEmergencyContact):', error);
+      // Silently fail and use memory cache as fallback
+      memoryCache.emergencyContacts.set(userId, contact);
     }
   }
 
@@ -74,7 +74,8 @@ class CacheService {
     try {
       await redis.del(`profile:${userId}`);
     } catch (error) {
-      console.error('Cache error (invalidateProfile):', error);
+      // Silently fail and clear memory cache
+      memoryCache.profiles.delete(userId);
     }
   }
 
@@ -86,7 +87,8 @@ class CacheService {
     try {
       await redis.del(`emergency:${userId}`);
     } catch (error) {
-      console.error('Cache error (invalidateEmergencyContact):', error);
+      // Silently fail and clear memory cache
+      memoryCache.emergencyContacts.delete(userId);
     }
   }
 
@@ -102,7 +104,9 @@ class CacheService {
         redis.del(`emergency:${userId}`)
       ]);
     } catch (error) {
-      console.error('Cache error (invalidateAllUserData):', error);
+      // Silently fail and clear memory cache
+      memoryCache.profiles.delete(userId);
+      memoryCache.emergencyContacts.delete(userId);
     }
   }
 }

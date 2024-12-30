@@ -36,7 +36,8 @@ try {
     fs.mkdirSync(profilesDir, { recursive: true });
   }
 } catch (err) {
-  console.error('Error creating upload directories:', err);
+  // Log error to error reporting service in production
+  process.env.NODE_ENV === 'development' && console.error('Error creating upload directories:', err);
 }
 
 // Enable CORS with specific options
@@ -92,10 +93,12 @@ app.get('/health', (req, res) => {
 
 // Error handling middleware
 app.use((err, req, res, next) => {
-  console.error(err.stack);
+  // Log error to error reporting service in production
+  process.env.NODE_ENV === 'development' && console.error(err);
+  
   res.status(500).json({ 
     status: 'error',
-    message: 'Something went wrong!'
+    message: process.env.NODE_ENV === 'development' ? err.message : 'Something went wrong!'
   });
 });
 

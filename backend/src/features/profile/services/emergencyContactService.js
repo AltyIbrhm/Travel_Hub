@@ -22,7 +22,6 @@ class EmergencyContactService {
       
       return result.recordset[0];
     } catch (error) {
-      console.error('Error in getEmergencyContact:', error);
       throw error;
     }
   }
@@ -65,7 +64,6 @@ class EmergencyContactService {
       
       return result.recordset[0];
     } catch (error) {
-      console.error('Error in createEmergencyContactRaw:', error);
       throw error;
     }
   }
@@ -124,10 +122,9 @@ class EmergencyContactService {
 
           SELECT * FROM @Output;
         `);
-      
+
       return result.recordset[0];
     } catch (error) {
-      console.error('Error in createEmergencyContact:', error);
       throw error;
     }
   }
@@ -177,7 +174,7 @@ class EmergencyContactService {
 
           SELECT * FROM @Output;
         `);
-      
+
       if (!result.recordset[0]) {
         return this.createEmergencyContact({
           userId,
@@ -189,7 +186,6 @@ class EmergencyContactService {
       
       return result.recordset[0];
     } catch (error) {
-      console.error('Error in updateEmergencyContact:', error);
       throw error;
     }
   }
@@ -201,7 +197,6 @@ class EmergencyContactService {
         .input('userId', sql.Int, userId)
         .query('DELETE FROM EmergencyContacts WHERE UserID = @userId');
     } catch (error) {
-      console.error('Error in deleteEmergencyContact:', error);
       throw error;
     }
   }

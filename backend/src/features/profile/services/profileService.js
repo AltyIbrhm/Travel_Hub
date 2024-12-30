@@ -27,17 +27,14 @@ class ProfileService {
       
       return result.recordset[0];
     } catch (error) {
-      console.error('Error in getProfile:', error);
       throw error;
     }
   }
 
-  // Raw profile creation that bypasses validation
   async createProfileRaw(profileData) {
     try {
       const pool = await getConnection();
       
-      // Insert the profile directly
       const result = await pool.request()
         .input('userId', sql.Int, profileData.userId)
         .input('firstName', sql.NVarChar(50), profileData.firstName || '')
@@ -92,7 +89,6 @@ class ProfileService {
       
       return result.recordset[0];
     } catch (error) {
-      console.error('Error in createProfileRaw:', error);
       throw error;
     }
   }
@@ -101,7 +97,6 @@ class ProfileService {
     try {
       const pool = await getConnection();
       
-      // Create the profile
       const createResult = await pool.request()
         .input('userId', sql.Int, profileData.userId)
         .input('firstName', sql.NVarChar(50), profileData.firstName)
@@ -138,10 +133,9 @@ class ProfileService {
           
           SELECT SCOPE_IDENTITY() AS ProfileID;
         `);
-      
+
       const profileId = createResult.recordset[0].ProfileID;
       
-      // Fetch the created profile
       const getResult = await pool.request()
         .input('profileId', sql.Int, profileId)
         .query(`
@@ -164,7 +158,6 @@ class ProfileService {
       
       return getResult.recordset[0];
     } catch (error) {
-      console.error('Error in createProfile:', error);
       throw error;
     }
   }
@@ -175,7 +168,6 @@ class ProfileService {
       const request = pool.request()
         .input('userId', sql.Int, userId);
 
-      // Build the update query dynamically based on provided fields
       let updateFields = [];
       let queryParams = [];
 
@@ -208,7 +200,6 @@ class ProfileService {
         updateFields.push('ProfilePicture = @profilePicture');
       }
 
-      // If no fields to update, just return the current profile
       if (updateFields.length === 0) {
         const result = await request.query('SELECT * FROM Profiles WHERE UserID = @userId');
         return result.recordset[0];
@@ -225,7 +216,6 @@ class ProfileService {
       const result = await request.query(updateQuery);
       return result.recordset[0];
     } catch (error) {
-      console.error('Error in updateProfile:', error);
       throw error;
     }
   }
@@ -239,7 +229,6 @@ class ProfileService {
       
       return true;
     } catch (error) {
-      console.error('Error in deleteProfile:', error);
       throw error;
     }
   }
