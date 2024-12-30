@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { profileService } from '../services/profileService';
 import { toast } from 'react-toastify';
 
@@ -20,6 +20,7 @@ export const useProfileForm = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [photoFile, setPhotoFile] = useState(null);
+  const saveTimeoutRef = useRef(null);
 
   // Load profile data
   useEffect(() => {
@@ -105,6 +106,16 @@ export const useProfileForm = () => {
     }
   };
 
+  // Validate phone number format
+  const isValidPhone = (phone) => {
+    return /^\(\d{3}\) \d{3}-\d{4}$/.test(phone);
+  };
+
+  // Validate date format
+  const isValidDate = (date) => {
+    return /^\d{4}-\d{2}-\d{2}$/.test(date) || /^\d{2}\/\d{2}\/\d{4}$/.test(date);
+  };
+
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData(prevData => ({
@@ -112,9 +123,34 @@ export const useProfileForm = () => {
       [name]: value
     }));
 
-    // Trigger auto-save after change
-    handleSubmit({ ...formData, [name]: value });
+    // Clear any existing timeout
+    if (saveTimeoutRef.current) {
+      clearTimeout(saveTimeoutRef.current);
+    }
+
+    // For phone and date fields, only save if they're complete and valid
+    if (name === 'phoneNumber' && !isValidPhone(value)) {
+      return; // Don't save incomplete phone numbers
+    }
+
+    if (name === 'dateOfBirth' && !isValidDate(value)) {
+      return; // Don't save incomplete dates
+    }
+
+    // Debounce the save for 1 second after typing stops
+    saveTimeoutRef.current = setTimeout(() => {
+      handleSubmit({ ...formData, [name]: value });
+    }, 1000);
   };
+
+  // Cleanup timeout on unmount
+  useEffect(() => {
+    return () => {
+      if (saveTimeoutRef.current) {
+        clearTimeout(saveTimeoutRef.current);
+      }
+    };
+  }, []);
 
   const handlePhotoChange = (file) => {
     setPhotoFile(file);
@@ -165,7 +201,17 @@ export const useProfileForm = () => {
     }
     
     setError(null);
-    console.log('Submitting profile data:', data); // Debug log
+
+    // Validate required fields
+    if (data.phoneNumber && !isValidPhone(data.phoneNumber)) {
+      setError('Please enter a complete phone number');
+      return;
+    }
+
+    if (data.dateOfBirth && !isValidDate(data.dateOfBirth)) {
+      setError('Please enter a valid date');
+      return;
+    }
 
     try {
       setLoading(true);
@@ -187,15 +233,15 @@ export const useProfileForm = () => {
         address: data.address
       };
       
-      console.log('Sending profile update:', profileData); // Debug log
+      console.log('Sending profile update:', profileData);
       const profileResponse = await profileService.updateProfile(profileData);
-      console.log('Profile update response:', profileResponse); // Debug log
+      console.log('Profile update response:', profileResponse);
 
       if (profileResponse) {
         toast.success('Profile updated successfully');
       }
 
-      // Update emergency contact
+      // Update emergency contact if needed
       if (data.emergencyName || data.emergencyPhone || data.emergencyRelationship) {
         const emergencyData = {
           emergencyName: data.emergencyName,
@@ -209,12 +255,6 @@ export const useProfileForm = () => {
       console.error('Profile update error:', error);
       setError(error.message || 'Failed to update profile');
       toast.error(error.message || 'Failed to update profile');
-      
-      if (error.errors) {
-        error.errors.forEach(err => {
-          toast.error(`${err.field}: ${err.message}`);
-        });
-      }
     } finally {
       setLoading(false);
     }
