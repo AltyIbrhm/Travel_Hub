@@ -23,13 +23,19 @@
   align-items: center;
   gap: var(--spacing-xl);
   padding: var(--spacing-xl);
-  background: var(--bg-primary);
+  background: linear-gradient(to right, var(--bg-primary), var(--bg-primary) 60%, rgba(var(--primary-color-rgb), 0.05));
   border-radius: var(--border-radius-lg);
   box-shadow: var(--shadow-sm);
   margin-bottom: var(--spacing-xl);
   position: relative;
   border: 1px solid var(--border-color);
   width: 100%;
+  transition: all var(--transition-speed) ease;
+}
+
+.profile-header:hover {
+  box-shadow: var(--shadow-md);
+  border-color: rgba(var(--primary-color-rgb), 0.3);
 }
 
 /* Profile Photo */
@@ -41,6 +47,7 @@
   margin: 0;
   border-radius: 50%;
   overflow: hidden;
+  box-shadow: 0 0 0 4px var(--bg-primary), 0 0 0 5px var(--border-color);
 }
 
 .profile-photo {
@@ -57,7 +64,7 @@
 }
 
 .profile-photo:hover {
-  transform: translateY(-2px);
+  transform: translateY(-2px) scale(1.02);
   box-shadow: var(--shadow-md);
 }
 
@@ -75,53 +82,74 @@
   bottom: 0;
   left: 0;
   right: 0;
-  background: rgba(0, 0, 0, 0.6);
+  height: 40%;
+  background: linear-gradient(to top, rgba(0, 0, 0, 0.9), transparent);
   display: flex;
   justify-content: center;
-  align-items: center;
-  gap: var(--spacing-sm);
-  padding: var(--spacing-sm);
+  align-items: flex-end;
+  gap: var(--spacing-md);
+  padding: var(--spacing-md);
   opacity: 0;
-  transition: opacity var(--transition-speed);
+  transition: all 0.3s ease;
+  transform: translateY(10px);
 }
 
 .profile-photo:hover .photo-overlay {
   opacity: 1;
+  transform: translateY(0);
 }
 
-/* Override Bootstrap button styles */
+/* Photo Button Styles */
 .photo-button.btn-link {
-  background: none;
-  border: none;
-  padding: var(--spacing-xs);
+  background: rgba(255, 255, 255, 0.15);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  padding: var(--spacing-sm) var(--spacing-md);
   color: white;
-  border-radius: var(--border-radius-sm);
+  border-radius: var(--border-radius-lg);
   cursor: pointer;
-  transition: all var(--transition-speed);
+  transition: all 0.2s ease;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: var(--font-size-lg);
+  font-size: var(--font-size-md);
   text-decoration: none;
   margin: 0;
   min-width: auto;
   line-height: 1;
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
 }
 
 .photo-button.btn-link:hover {
-  background: rgba(255, 255, 255, 0.2);
-  transform: scale(1.1);
-  color: white;
+  background: rgba(255, 255, 255, 0.25);
+  border-color: rgba(255, 255, 255, 0.5);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.photo-button.btn-link:active {
+  transform: translateY(0);
 }
 
 .photo-button.btn-link.delete {
-  color: var(--danger-color);
+  background: rgba(220, 53, 69, 0.15);
+  border-color: rgba(220, 53, 69, 0.3);
+  color: #fff;
 }
 
-.photo-button.btn-link:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-  pointer-events: none;
+.photo-button.btn-link.delete:hover {
+  background: rgba(220, 53, 69, 0.25);
+  border-color: rgba(220, 53, 69, 0.5);
+}
+
+.photo-button.btn-link svg {
+  width: 16px;
+  height: 16px;
+  transition: transform 0.2s ease;
+}
+
+.photo-button.btn-link:hover svg {
+  transform: scale(1.1);
 }
 
 .photo-loading {
@@ -130,12 +158,13 @@
   left: 0;
   right: 0;
   bottom: 0;
-  background: rgba(255, 255, 255, 0.8);
+  background: rgba(255, 255, 255, 0.9);
   display: flex;
   justify-content: center;
   align-items: center;
   border-radius: 50%;
   z-index: 1;
+  backdrop-filter: blur(4px);
 }
 
 /* Profile Info */
@@ -143,6 +172,7 @@
   flex: 1;
   margin: 0;
   padding: 0;
+  position: relative;
 }
 
 .profile-info h2 {
@@ -152,6 +182,9 @@
   font-weight: 600;
   line-height: 1.2;
   padding: 0;
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
 }
 
 .profile-info .text-muted {
@@ -160,6 +193,15 @@
   font-size: var(--font-size-md);
   padding: 0;
   display: block;
+  position: relative;
+  padding-left: var(--spacing-md);
+}
+
+.profile-info .text-muted::before {
+  content: '•';
+  position: absolute;
+  left: 0;
+  color: var(--primary-color);
 }
 
 /* Profile Tabs */
