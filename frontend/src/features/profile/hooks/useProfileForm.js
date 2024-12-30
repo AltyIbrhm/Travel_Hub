@@ -66,29 +66,32 @@ export const useProfileForm = () => {
             }));
           }
         } catch (createError) {
-          console.error('Failed to create profile:', createError);
           setError('Failed to create profile');
         }
       } else {
-        // If profile exists but has empty values, use localStorage data
-        setFormData(prevData => ({
-          ...prevData,
-          firstName: data.profile.name.first || userFirstName || '',
-          lastName: data.profile.name.last || userLastName || '',
-          email: data.profile.contact.email || userEmail || '',
-          phoneNumber: data.profile.contact.phone || '',
-          dateOfBirth: data.profile.dateOfBirth && 
-                      data.profile.dateOfBirth !== '1970-01-01' ? 
-                      formatDateForUI(data.profile.dateOfBirth) : '',
-          language: data.profile.preferences.language || 'English',
-          address: data.profile.address || '',
-          profilePicture: data.profile.avatar || null,
-          ...(data.emergencyContact && {
-            emergencyName: data.emergencyContact.contact.name || '',
-            emergencyPhone: data.emergencyContact.contact.phone || '',
-            emergencyRelationship: data.emergencyContact.contact.relationship || ''
-          })
-        }));
+        const profilePicture = data.profile.avatar || null;
+        
+        setFormData(prevData => {
+          const newData = {
+            ...prevData,
+            firstName: data.profile.name.first || userFirstName || '',
+            lastName: data.profile.name.last || userLastName || '',
+            email: data.profile.contact.email || userEmail || '',
+            phoneNumber: data.profile.contact.phone || '',
+            dateOfBirth: data.profile.dateOfBirth && 
+                        data.profile.dateOfBirth !== '1970-01-01' ? 
+                        formatDateForUI(data.profile.dateOfBirth) : '',
+            language: data.profile.preferences.language || 'English',
+            address: data.profile.address || '',
+            profilePicture,
+            ...(data.emergencyContact && {
+              emergencyName: data.emergencyContact.contact.name || '',
+              emergencyPhone: data.emergencyContact.contact.phone || '',
+              emergencyRelationship: data.emergencyContact.contact.relationship || ''
+            })
+          };
+          return newData;
+        });
 
         // If profile has empty values, update it with user data
         if (!data.profile.name.first && userFirstName) {
@@ -104,7 +107,6 @@ export const useProfileForm = () => {
         }
       }
     } catch (error) {
-      console.error('Profile load error:', error);
       setError(error.message || 'Failed to load profile data');
     } finally {
       setLoading(false);
@@ -226,27 +228,49 @@ export const useProfileForm = () => {
     };
   }, []);
 
-  const handlePhotoChange = (file) => {
-    setPhotoFile(file);
-  };
-
-  const handlePhotoUpload = async () => {
-    if (!photoFile) return;
-
+  const handlePhotoChange = async (file) => {
     try {
       setLoading(true);
-      const response = await profileService.uploadProfilePhoto(photoFile);
-      setFormData(prev => ({
-        ...prev,
-        profilePicture: response.profile.avatar
-      }));
-      toast.success('Profile photo updated successfully');
+      const response = await profileService.uploadProfilePhoto(file);
+      const avatarPath = response.profile?.avatar;
+
+      if (avatarPath) {
+        // Reload the entire profile to ensure we have the latest data
+        await loadProfile();
+        
+        toast.success('Profile photo updated successfully', {
+          position: "top-right",
+          autoClose: 3000,
+          hideProgressBar: false,
+          closeOnClick: true,
+          pauseOnHover: true,
+          draggable: true,
+          progress: undefined
+        });
+      } else {
+        toast.error('Failed to update profile photo', {
+          position: "top-right",
+          autoClose: 3000,
+          hideProgressBar: false,
+          closeOnClick: true,
+          pauseOnHover: true,
+          draggable: true,
+          progress: undefined
+        });
+      }
     } catch (error) {
-      toast.error('Failed to upload profile photo');
+      toast.error(error.message || 'Failed to upload profile photo', {
+        position: "top-right",
+        autoClose: 3000,
+        hideProgressBar: false,
+        closeOnClick: true,
+        pauseOnHover: true,
+        draggable: true,
+        progress: undefined
+      });
       setError(error.message);
     } finally {
       setLoading(false);
-      setPhotoFile(null);
     }
   };
 
@@ -260,7 +284,7 @@ export const useProfileForm = () => {
       }));
       toast.success('Profile photo deleted successfully');
     } catch (error) {
-      toast.error('Failed to delete profile photo');
+      toast.error(error.message || 'Failed to delete profile photo');
       setError(error.message);
     } finally {
       setLoading(false);
@@ -316,11 +340,6 @@ export const useProfileForm = () => {
     try {
       setLoading(true);
 
-      // Upload photo if selected
-      if (photoFile) {
-        await handlePhotoUpload();
-      }
-
       // Update profile
       const profileData = {
         firstName: data.firstName,
@@ -355,7 +374,6 @@ export const useProfileForm = () => {
       }
 
     } catch (error) {
-      console.error('Profile update error:', error);
       setError(error.message || 'Failed to update profile');
       toast.error(error.message || 'Failed to update profile');
     } finally {
@@ -432,8 +450,7 @@ export const useProfileForm = () => {
     handleBlur,
     handleSubmit,
     handlePhotoChange,
-    handleDeletePhoto,
-    handlePhotoUpload
+    handleDeletePhoto
   };
 };
 

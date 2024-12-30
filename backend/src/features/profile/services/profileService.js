@@ -172,30 +172,57 @@ class ProfileService {
   async updateProfile(userId, profileData) {
     try {
       const pool = await getConnection();
-      const result = await pool.request()
-        .input('userId', sql.Int, userId)
-        .input('firstName', sql.NVarChar(50), profileData.firstName)
-        .input('lastName', sql.NVarChar(50), profileData.lastName)
-        .input('phoneNumber', sql.NVarChar(20), profileData.phoneNumber)
-        .input('dateOfBirth', sql.Date, new Date(profileData.dateOfBirth))
-        .input('language', sql.NVarChar(20), profileData.language)
-        .input('address', sql.NVarChar(255), profileData.address)
-        .input('profilePicture', sql.NVarChar(255), profileData.profilePicture)
-        .query(`
-          UPDATE Profiles
-          SET
-            FirstName = @firstName,
-            LastName = @lastName,
-            PhoneNumber = @phoneNumber,
-            DateOfBirth = @dateOfBirth,
-            Language = @language,
-            Address = @address,
-            ProfilePicture = @profilePicture
-          WHERE UserID = @userId;
-          
-          SELECT * FROM Profiles WHERE UserID = @userId;
-        `);
-      
+      const request = pool.request()
+        .input('userId', sql.Int, userId);
+
+      // Build the update query dynamically based on provided fields
+      let updateFields = [];
+      let queryParams = [];
+
+      if (profileData.firstName !== undefined) {
+        request.input('firstName', sql.NVarChar(50), profileData.firstName);
+        updateFields.push('FirstName = @firstName');
+      }
+      if (profileData.lastName !== undefined) {
+        request.input('lastName', sql.NVarChar(50), profileData.lastName);
+        updateFields.push('LastName = @lastName');
+      }
+      if (profileData.phoneNumber !== undefined) {
+        request.input('phoneNumber', sql.NVarChar(20), profileData.phoneNumber);
+        updateFields.push('PhoneNumber = @phoneNumber');
+      }
+      if (profileData.dateOfBirth !== undefined) {
+        request.input('dateOfBirth', sql.Date, new Date(profileData.dateOfBirth));
+        updateFields.push('DateOfBirth = @dateOfBirth');
+      }
+      if (profileData.language !== undefined) {
+        request.input('language', sql.NVarChar(20), profileData.language);
+        updateFields.push('Language = @language');
+      }
+      if (profileData.address !== undefined) {
+        request.input('address', sql.NVarChar(255), profileData.address);
+        updateFields.push('Address = @address');
+      }
+      if (profileData.profilePicture !== undefined) {
+        request.input('profilePicture', sql.NVarChar(255), profileData.profilePicture);
+        updateFields.push('ProfilePicture = @profilePicture');
+      }
+
+      // If no fields to update, just return the current profile
+      if (updateFields.length === 0) {
+        const result = await request.query('SELECT * FROM Profiles WHERE UserID = @userId');
+        return result.recordset[0];
+      }
+
+      const updateQuery = `
+        UPDATE Profiles
+        SET ${updateFields.join(', ')}
+        WHERE UserID = @userId;
+        
+        SELECT * FROM Profiles WHERE UserID = @userId;
+      `;
+
+      const result = await request.query(updateQuery);
       return result.recordset[0];
     } catch (error) {
       console.error('Error in updateProfile:', error);

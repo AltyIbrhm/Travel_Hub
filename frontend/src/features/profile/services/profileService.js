@@ -129,7 +129,14 @@ export const profileService = {
       });
       return response.data;
     } catch (error) {
-      throw this.handleError(error);
+      if (error.response?.status === 400) {
+        throw new Error(error.response.data.message || 'Invalid file');
+      } else if (error.response?.status === 500) {
+        throw new Error('Server error. Please try again later.');
+      } else if (!error.response) {
+        throw new Error('Cannot connect to server. Please check your internet connection');
+      }
+      throw error;
     }
   },
 
@@ -139,7 +146,14 @@ export const profileService = {
       const response = await api.delete('/profile/photo');
       return response.data;
     } catch (error) {
-      throw this.handleError(error);
+      if (error.response?.status === 404) {
+        throw new Error('No profile photo found');
+      } else if (error.response?.status === 500) {
+        throw new Error('Server error. Please try again later.');
+      } else if (!error.response) {
+        throw new Error('Cannot connect to server. Please check your internet connection');
+      }
+      throw error;
     }
   },
 

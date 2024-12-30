@@ -2,7 +2,7 @@ const express = require('express');
 const router = express.Router();
 const multer = require('multer');
 const path = require('path');
-const fs = require('fs').promises;
+const fs = require('fs');
 const profileController = require('../controllers/profileController');
 const { authenticateToken } = require('../../../middleware/auth');
 const { validateProfile, validateEmergencyContact } = require('../validators/profileValidator');
@@ -10,37 +10,35 @@ const { profileLimiter, photoUploadLimiter, emergencyContactLimiter } = require(
 
 // Configure multer for file uploads
 const storage = multer.diskStorage({
-  destination: async function (req, file, cb) {
-    const uploadDir = path.join(process.env.UPLOAD_DIR, 'profiles');
-    try {
-      await fs.mkdir(uploadDir, { recursive: true });
-      cb(null, uploadDir);
-    } catch (error) {
-      cb(error);
+  destination: function (req, file, cb) {
+    const uploadDir = path.join(__dirname, '../../../uploads/profiles');
+    
+    if (!fs.existsSync(uploadDir)) {
+      fs.mkdirSync(uploadDir, { recursive: true });
     }
+    
+    cb(null, uploadDir);
   },
   filename: function (req, file, cb) {
     const userId = req.user.id;
-    const uniqueSuffix = Date.now();
-    cb(null, `${userId}-${uniqueSuffix}${path.extname(file.originalname)}`);
+    const fileName = `${userId}-${Date.now()}${path.extname(file.originalname)}`;
+    cb(null, fileName);
   }
 });
 
 const fileFilter = (req, file, cb) => {
-  const allowedTypes = ['image/jpeg', 'image/png', 'image/gif'];
-  if (allowedTypes.includes(file.mimetype)) {
-    cb(null, true);
-  } else {
-    cb(new Error('Invalid file type. Only JPEG, PNG and GIF are allowed.'), false);
+  if (!file.mimetype.startsWith('image/')) {
+    return cb(new Error('Only image files are allowed!'), false);
   }
+  cb(null, true);
 };
 
-const upload = multer({
+const upload = multer({ 
   storage: storage,
+  fileFilter: fileFilter,
   limits: {
     fileSize: 5 * 1024 * 1024 // 5MB limit
-  },
-  fileFilter: fileFilter
+  }
 });
 
 // All routes are protected with authentication
@@ -66,6 +64,7 @@ router.post(
   upload.single('photo'),
   profileController.uploadProfilePhoto
 );
+
 router.delete('/photo', photoUploadLimiter, profileController.deleteProfilePhoto);
 
 // Error handling for file uploads
@@ -79,16 +78,19 @@ router.use((error, req, res, next) => {
     }
     return res.status(400).json({
       status: 'error',
-      message: 'Error uploading file'
+      message: `Error uploading file: ${error.message}`
     });
   }
-  if (error.message === 'Invalid file type. Only JPEG, PNG and GIF are allowed.') {
+  if (error.message === 'Only image files are allowed!') {
     return res.status(400).json({
       status: 'error',
       message: error.message
     });
   }
-  next(error);
+  res.status(500).json({
+    status: 'error',
+    message: 'Unexpected error during file upload'
+  });
 });
 
 module.exports = router; 

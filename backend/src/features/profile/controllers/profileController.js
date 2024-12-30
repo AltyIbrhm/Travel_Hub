@@ -225,15 +225,23 @@ class ProfileController {
       }
 
       const userId = req.user.id;
-      const fileName = `${userId}-${Date.now()}${path.extname(req.file.originalname)}`;
+      const fileName = req.file.filename;
       const filePath = `/uploads/profiles/${fileName}`;
+
+      console.log('File upload details:', {
+        originalName: req.file.originalname,
+        fileName: fileName,
+        filePath: filePath,
+        fullPath: req.file.path
+      });
 
       // Get current profile to delete old photo if exists
       const currentProfile = await profileService.getProfile(userId);
       if (currentProfile?.profilePicture) {
-        const oldFilePath = path.join(process.env.UPLOAD_DIR, currentProfile.profilePicture);
+        const oldPath = path.join(__dirname, '../../../', currentProfile.profilePicture);
         try {
-          await fs.unlink(oldFilePath);
+          await fs.promises.unlink(oldPath);
+          console.log('Deleted old profile photo:', oldPath);
         } catch (error) {
           console.error('Error deleting old profile photo:', error);
         }
@@ -241,23 +249,24 @@ class ProfileController {
 
       // Update profile with new photo path
       const updatedProfile = await profileService.updateProfile(userId, {
-        ...currentProfile,
         profilePicture: filePath
       });
 
-      // Invalidate cache
-      await cacheService.invalidateProfile(userId);
+      console.log('Profile updated with new photo path:', filePath);
 
       res.json({
         status: 'success',
         message: 'Profile photo uploaded successfully',
-        profile: transformProfileResponse(updatedProfile)
+        profile: {
+          avatar: filePath
+        }
       });
     } catch (error) {
       console.error('Error in uploadProfilePhoto:', error);
       res.status(500).json({
         status: 'error',
-        message: 'Error uploading profile photo'
+        message: 'Error uploading profile photo',
+        details: error.message
       });
     }
   }
