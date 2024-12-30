@@ -66,6 +66,7 @@ router.post(
 );
 
 router.delete('/photo', photoUploadLimiter, profileController.deleteProfilePhoto);
+router.post('/reset-photo', profileController.resetProfilePhoto);
 
 // Error handling for file uploads
 router.use((error, req, res, next) => {

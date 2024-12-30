@@ -18,9 +18,18 @@ export const ProfileHeader = ({
 
   const getProfilePictureUrl = (path) => {
     if (!path) return defaultAvatar;
+    if (path.startsWith('http')) return path;
+    
+    // If path already includes /api/, just append to base URL
+    if (path.startsWith('/api/')) {
+      const finalUrl = `${API_URL}${path}`;
+      return finalUrl;
+    }
+    
+    // Otherwise, construct the full path
     const cleanPath = path.startsWith('/') ? path.substring(1) : path;
-    const url = path.startsWith('http') ? path : `${API_URL}/${cleanPath}`;
-    return url;
+    const finalUrl = `${API_URL}/api/${cleanPath}`;
+    return finalUrl;
   };
 
   const handleImageError = (e) => {

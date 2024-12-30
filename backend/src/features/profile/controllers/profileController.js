@@ -7,26 +7,23 @@ const {
   transformProfileWithEmergencyContact
 } = require('../transformers/profileTransformer');
 const path = require('path');
-const fs = require('fs').promises;
+const fs = require('fs');
+const fsPromises = require('fs').promises;
 
 class ProfileController {
   // Get profile and emergency contact
   async getProfile(req, res) {
     try {
       const userId = req.user.id;
-      console.log('Getting profile for user:', userId);
 
       // Try to get from cache first
-      console.log('Checking cache...');
       const cachedProfile = await cacheService.getProfile(userId);
       const cachedEmergencyContact = await cacheService.getEmergencyContact(userId);
 
       if (cachedProfile && cachedEmergencyContact) {
-        console.log('Cache hit - returning cached data');
         return res.json(transformProfileWithEmergencyContact(cachedProfile, cachedEmergencyContact));
       }
 
-      console.log('Cache miss - fetching from database');
       // If not in cache, get from database
       let [profile, emergencyContact] = await Promise.all([
         profileService.getProfile(userId),
@@ -38,10 +35,9 @@ class ProfileController {
 
       // If no profile exists, create a default one
       if (!profile) {
-        console.log('No profile found - creating default profile');
         try {
           // Create profile directly in the database to bypass validation
-          const result = await profileService.createProfileRaw({
+          profile = await profileService.createProfileRaw({
             userId,
             firstName: '',
             lastName: '',
@@ -52,26 +48,16 @@ class ProfileController {
             address: '',
             profilePicture: null
           });
-          profile = result;
-          console.log('Default profile created:', profile);
 
           // Create empty emergency contact directly in the database
-          const contactResult = await emergencyContactService.createEmergencyContactRaw({
+          emergencyContact = await emergencyContactService.createEmergencyContactRaw({
             userId,
             emergencyName: '',
             emergencyPhone: '',
             emergencyRelationship: ''
           });
-          emergencyContact = contactResult;
-          console.log('Default emergency contact created:', emergencyContact);
         } catch (createError) {
           console.error('Error creating default profile:', createError);
-          if (createError.code) {
-            console.error('SQL Error Code:', createError.code);
-          }
-          if (createError.number) {
-            console.error('SQL Error Number:', createError.number);
-          }
           return res.status(500).json({
             status: 'error',
             message: 'Failed to create default profile',
@@ -81,24 +67,15 @@ class ProfileController {
       }
 
       // Cache the results
-      console.log('Caching results...');
       await Promise.all([
         cacheService.setProfile(userId, profile),
         cacheService.setEmergencyContact(userId, emergencyContact)
       ]);
 
-      console.log('Sending response...');
       const response = transformProfileWithEmergencyContact(profile, emergencyContact);
-      console.log('Transformed response:', response);
       res.json(response);
     } catch (error) {
       console.error('Error in getProfile controller:', error);
-      if (error.code) {
-        console.error('SQL Error Code:', error.code);
-      }
-      if (error.number) {
-        console.error('SQL Error Number:', error.number);
-      }
       res.status(500).json({
         status: 'error',
         message: 'Internal server error',
@@ -226,7 +203,7 @@ class ProfileController {
 
       const userId = req.user.id;
       const fileName = req.file.filename;
-      const filePath = `/uploads/profiles/${fileName}`;
+      const filePath = `/api/uploads/profiles/${fileName}`;
 
       console.log('File upload details:', {
         originalName: req.file.originalname,
@@ -277,29 +254,29 @@ class ProfileController {
       const userId = req.user.id;
       const profile = await profileService.getProfile(userId);
 
-      if (!profile?.profilePicture) {
+      if (!profile?.ProfilePicture) {
         return res.status(404).json({
           status: 'error',
           message: 'No profile photo found'
         });
       }
 
-      // Delete the file
-      const filePath = path.join(process.env.UPLOAD_DIR, profile.profilePicture);
-      try {
-        await fs.unlink(filePath);
-      } catch (error) {
-        console.error('Error deleting profile photo file:', error);
+      // Remove /api/ prefix and get the relative path
+      const relativePath = profile.ProfilePicture.replace(/^\/api\//, '');
+      const filePath = path.join(__dirname, '../../../', relativePath);
+
+      if (fs.existsSync(filePath)) {
+        await fsPromises.unlink(filePath);
       }
 
       // Update profile to remove photo reference
       const updatedProfile = await profileService.updateProfile(userId, {
-        ...profile,
-        profilePicture: null
+        ProfilePicture: null
       });
 
       // Invalidate cache
       await cacheService.invalidateProfile(userId);
+      await cacheService.invalidateAllUserData(userId);
 
       res.json({
         status: 'success',
@@ -307,10 +284,38 @@ class ProfileController {
         profile: transformProfileResponse(updatedProfile)
       });
     } catch (error) {
-      console.error('Error in deleteProfilePhoto:', error);
+      console.error('Error deleting profile photo:', error);
       res.status(500).json({
         status: 'error',
         message: 'Error deleting profile photo'
+      });
+    }
+  }
+
+  // Reset profile photo
+  async resetProfilePhoto(req, res) {
+    try {
+      const userId = req.user.id;
+      
+      // Update profile to remove photo reference
+      const updatedProfile = await profileService.updateProfile(userId, {
+        profilePicture: null
+      });
+
+      // Invalidate cache
+      await cacheService.invalidateProfile(userId);
+      await cacheService.invalidateAllUserData(userId);
+
+      res.json({
+        status: 'success',
+        message: 'Profile photo reset successfully',
+        profile: transformProfileResponse(updatedProfile)
+      });
+    } catch (error) {
+      console.error('Error resetting profile photo:', error);
+      res.status(500).json({
+        status: 'error',
+        message: 'Error resetting profile photo'
       });
     }
   }

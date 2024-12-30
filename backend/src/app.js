@@ -48,23 +48,8 @@ app.use(cors({
   allowedHeaders: ['Content-Type', 'Authorization']
 }));
 
-// Serve static files from the uploads directory with correct MIME types
-app.use('/uploads', (req, res, next) => {
-  const requestPath = req.url.replace(/^\/+/, '');
-  const fullPath = path.join(uploadsDir, requestPath);
-  
-  if (!fs.existsSync(fullPath)) {
-    return res.status(404).send('File not found');
-  }
-  
-  try {
-    fs.accessSync(fullPath, fs.constants.R_OK);
-  } catch (err) {
-    return res.status(403).send('File is not accessible');
-  }
-  
-  next();
-}, express.static(uploadsDir, {
+// Serve static files from the uploads directory
+app.use('/api/uploads', express.static(path.join(__dirname, 'uploads'), {
   setHeaders: (res, filePath) => {
     if (filePath.endsWith('.jpg') || filePath.endsWith('.jpeg')) {
       res.setHeader('Content-Type', 'image/jpeg');

@@ -447,10 +447,10 @@ export const useProfileForm = () => {
     loading,
     error,
     handleChange,
-    handleBlur,
     handleSubmit,
     handlePhotoChange,
-    handleDeletePhoto
+    handleDeletePhoto,
+    handleBlur
   };
 };
 

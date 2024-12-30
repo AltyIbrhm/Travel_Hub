@@ -143,12 +143,32 @@ export const profileService = {
   // Delete profile photo
   async deleteProfilePhoto() {
     try {
-      const response = await api.delete('/profile/photo');
+      const token = localStorage.getItem('token');
+      const response = await api.delete('/profile/photo', {
+        headers: {
+          Authorization: `Bearer ${token}`
+        }
+      });
       return response.data;
     } catch (error) {
       if (error.response?.status === 404) {
         throw new Error('No profile photo found');
       } else if (error.response?.status === 500) {
+        throw new Error('Server error. Please try again later.');
+      } else if (!error.response) {
+        throw new Error('Cannot connect to server. Please check your internet connection');
+      }
+      throw error;
+    }
+  },
+
+  // Reset profile photo
+  async resetProfilePhoto() {
+    try {
+      const response = await api.post('/profile/reset-photo');
+      return response.data;
+    } catch (error) {
+      if (error.response?.status === 500) {
         throw new Error('Server error. Please try again later.');
       } else if (!error.response) {
         throw new Error('Cannot connect to server. Please check your internet connection');
