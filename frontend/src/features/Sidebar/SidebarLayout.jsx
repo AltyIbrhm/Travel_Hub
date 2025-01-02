@@ -6,7 +6,7 @@ import '../../styles/components/_sidebar.css';
 
 const SidebarLayout = () => {
   const { isCollapsed, toggleSidebar } = useSidebar();
-  const { profile, getProfilePictureUrl } = useProfile();
+  const { profile, loading, getProfilePictureUrl } = useProfile();
   const location = useLocation();
   const navigate = useNavigate();
 
@@ -143,7 +143,7 @@ const SidebarLayout = () => {
           />
           <div className="user-details">
             <span className="user-name">
-              {profile ? `${profile.name?.first || ''} ${profile.name?.last || ''}` : 'Loading...'}
+              {loading ? 'Loading...' : profile?.name ? `${profile.name.first || ''} ${profile.name.last || ''}` : 'Guest'}
             </span>
             <span className="user-role">Passenger</span>
           </div>

@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { profileService } from '../services/profileService';
 import { toast } from 'react-toastify';
+import { useProfile } from '../context/ProfileContext';
 
 export const useProfileForm = () => {
   const [formData, setFormData] = useState({
@@ -22,6 +23,7 @@ export const useProfileForm = () => {
   const [photoFile, setPhotoFile] = useState(null);
   const saveTimeoutRef = useRef(null);
   const lastUpdateTimeRef = useRef(0);
+  const { refreshProfile } = useProfile();
 
   // Load profile data
   useEffect(() => {
@@ -193,9 +195,10 @@ export const useProfileForm = () => {
     }
 
     // Debounce other field updates
-    saveTimeoutRef.current = setTimeout(() => {
+    saveTimeoutRef.current = setTimeout(async () => {
       const updatedData = { ...formData, [name]: value };
-      handleSubmit(updatedData);
+      await handleSubmit(updatedData);
+      await refreshProfile(); // Refresh profile context after update
     }, 1000);
   };
 
@@ -235,39 +238,13 @@ export const useProfileForm = () => {
       const avatarPath = response.profile?.avatar;
 
       if (avatarPath) {
-        // Reload the entire profile to ensure we have the latest data
-        await loadProfile();
-        
-        toast.success('Profile photo updated successfully', {
-          position: "top-right",
-          autoClose: 3000,
-          hideProgressBar: false,
-          closeOnClick: true,
-          pauseOnHover: true,
-          draggable: true,
-          progress: undefined
-        });
+        await refreshProfile(); // Use refreshProfile instead of loadProfile
+        toast.success('Profile photo updated successfully');
       } else {
-        toast.error('Failed to update profile photo', {
-          position: "top-right",
-          autoClose: 3000,
-          hideProgressBar: false,
-          closeOnClick: true,
-          pauseOnHover: true,
-          draggable: true,
-          progress: undefined
-        });
+        toast.error('Failed to update profile photo');
       }
     } catch (error) {
-      toast.error(error.message || 'Failed to upload profile photo', {
-        position: "top-right",
-        autoClose: 3000,
-        hideProgressBar: false,
-        closeOnClick: true,
-        pauseOnHover: true,
-        draggable: true,
-        progress: undefined
-      });
+      toast.error(error.message || 'Failed to upload profile photo');
       setError(error.message);
     } finally {
       setLoading(false);
@@ -282,6 +259,7 @@ export const useProfileForm = () => {
         ...prev,
         profilePicture: null
       }));
+      await refreshProfile();
       toast.success('Profile photo deleted successfully');
     } catch (error) {
       toast.error(error.message || 'Failed to delete profile photo');
@@ -360,6 +338,7 @@ export const useProfileForm = () => {
           ...profileResponse,
           dateOfBirth: profileResponse.dateOfBirth ? formatDateForUI(profileResponse.dateOfBirth) : ''
         }));
+        await refreshProfile(); // Add this to update the context immediately
         toast.success('Profile updated successfully');
       }
 
