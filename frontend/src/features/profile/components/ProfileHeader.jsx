@@ -17,18 +17,14 @@ export const ProfileHeader = ({
   const fileInputRef = useRef(null);
 
   const getProfilePictureUrl = (path) => {
+    console.log('Profile picture path:', path);
     if (!path) return defaultAvatar;
     if (path.startsWith('http')) return path;
     
-    // If path already includes /api/, just append to base URL
-    if (path.startsWith('/api/')) {
-      const finalUrl = `${API_URL}${path}`;
-      return finalUrl;
-    }
-    
-    // Otherwise, construct the full path
-    const cleanPath = path.startsWith('/') ? path.substring(1) : path;
-    const finalUrl = `${API_URL}/api/${cleanPath}`;
+    // Construct the URL for uploaded files
+    const cleanPath = path.replace(/^\/?(api\/uploads\/)?/, '');  // Remove leading slash and any existing api/uploads prefix
+    const finalUrl = `${API_URL}/api/uploads/${cleanPath}`;
+    console.log('Constructed URL:', finalUrl);
     return finalUrl;
   };
 
