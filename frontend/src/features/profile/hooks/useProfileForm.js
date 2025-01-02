@@ -167,11 +167,28 @@ export const useProfileForm = () => {
   const handlePhotoChange = async (file) => {
     try {
       setIsSaving(true);
+      
+      // First, delete the existing photo if there is one
+      if (formData.profilePicture) {
+        try {
+          await profileService.deleteProfilePhoto();
+          console.log('Successfully deleted old profile photo');
+        } catch (error) {
+          console.error('Error deleting old profile photo:', error);
+          // Continue with upload even if delete fails
+        }
+      }
+
+      // Then upload the new photo
       const response = await profileService.uploadProfilePhoto(file);
       const avatarPath = response.profile?.avatar;
 
       if (avatarPath) {
-        await refreshProfile(); // Use refreshProfile instead of loadProfile
+        setFormData(prev => ({
+          ...prev,
+          profilePicture: avatarPath
+        }));
+        await refreshProfile();
         toast.success('Profile photo updated successfully');
       } else {
         toast.error('Failed to update profile photo');
@@ -187,14 +204,29 @@ export const useProfileForm = () => {
   const handleDeletePhoto = async () => {
     try {
       setIsSaving(true);
-      await profileService.deleteProfilePhoto();
-      setFormData(prev => ({
-        ...prev,
-        profilePicture: null
-      }));
-      await refreshProfile();
-      toast.success('Profile photo deleted successfully');
+      
+      // Only attempt to delete if there is a profile picture
+      if (formData.profilePicture) {
+        const response = await profileService.deleteProfilePhoto();
+        
+        if (response.status === 'success') {
+          // Update local state
+          setFormData(prev => ({
+            ...prev,
+            profilePicture: null
+          }));
+          
+          // Refresh profile context to ensure UI is in sync
+          await refreshProfile();
+          toast.success('Profile photo deleted successfully');
+        } else {
+          toast.error('Failed to delete profile photo');
+        }
+      } else {
+        toast.info('No profile photo to delete');
+      }
     } catch (error) {
+      console.error('Error deleting profile photo:', error);
       toast.error(error.message || 'Failed to delete profile photo');
       setError(error.message);
     } finally {
