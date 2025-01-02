@@ -11,75 +11,57 @@ const fs = require('fs');
 const fsPromises = require('fs').promises;
 
 class ProfileController {
-  // Get profile and emergency contact
+  // Get profile
   async getProfile(req, res) {
     try {
       const userId = req.user.id;
-
-      // Try to get from cache first
-      const cachedProfile = await cacheService.getProfile(userId);
-      const cachedEmergencyContact = await cacheService.getEmergencyContact(userId);
-
-      if (cachedProfile && cachedEmergencyContact) {
-        return res.json(transformProfileWithEmergencyContact(cachedProfile, cachedEmergencyContact));
-      }
-
-      // If not in cache, get from database
-      let [profile, emergencyContact] = await Promise.all([
-        profileService.getProfile(userId),
-        emergencyContactService.getEmergencyContact(userId)
-      ]).catch(error => {
-        console.error('Database fetch error:', error);
-        throw error;
-      });
-
-      // If no profile exists, create a default one
+      console.log('Getting profile for user:', userId);
+      
+      const profile = await profileService.getProfile(userId);
+      
       if (!profile) {
-        try {
-          // Create profile directly in the database to bypass validation
-          profile = await profileService.createProfileRaw({
-            userId,
-            firstName: '',
-            lastName: '',
-            email: '',
-            phoneNumber: '',
-            dateOfBirth: new Date('2000-01-01'), // Default date
-            language: 'English',
-            address: '',
-            profilePicture: null
-          });
-
-          // Create empty emergency contact directly in the database
-          emergencyContact = await emergencyContactService.createEmergencyContactRaw({
-            userId,
-            emergencyName: '',
-            emergencyPhone: '',
-            emergencyRelationship: ''
-          });
-        } catch (createError) {
-          console.error('Error creating default profile:', createError);
-          return res.status(500).json({
-            status: 'error',
-            message: 'Failed to create default profile',
-            details: createError.message
-          });
-        }
+        return res.status(404).json({
+          status: 'error',
+          message: 'Profile not found'
+        });
       }
 
-      // Cache the results
-      await Promise.all([
-        cacheService.setProfile(userId, profile),
-        cacheService.setEmergencyContact(userId, emergencyContact)
-      ]);
+      // Transform profile data consistently
+      const transformedProfile = {
+        id: profile.ProfileID,
+        userId: profile.UserID,
+        name: {
+          first: profile.FirstName,
+          last: profile.LastName,
+          full: `${profile.FirstName} ${profile.LastName}`
+        },
+        contact: {
+          email: profile.Email,
+          phone: profile.PhoneNumber
+        },
+        preferences: {
+          language: profile.Language
+        },
+        dateOfBirth: profile.DateOfBirth,
+        address: profile.Address,
+        profilePicture: profile.ProfilePicture,
+        timestamps: {
+          created: profile.CreatedAt,
+          updated: profile.UpdatedAt
+        }
+      };
 
-      const response = transformProfileWithEmergencyContact(profile, emergencyContact);
-      res.json(response);
+      console.log('Transformed profile:', transformedProfile);
+
+      res.json({
+        status: 'success',
+        profile: transformedProfile
+      });
     } catch (error) {
-      console.error('Error in getProfile controller:', error);
+      console.error('Error in getProfile:', error);
       res.status(500).json({
         status: 'error',
-        message: 'Internal server error',
-        details: error.message
+        message: 'Error getting profile'
       });
     }
   }
@@ -203,16 +185,17 @@ class ProfileController {
 
       const userId = req.user.id;
       const fileName = req.file.filename;
-      const filePath = `/api/uploads/profiles/${fileName}`;
+      const filePath = `/uploads/profiles/${fileName}`;
       const uploadDir = path.join(__dirname, '../../../uploads/profiles');
 
-      console.log('Starting upload process for user:', userId);
-      console.log('File upload details:', {
-        originalName: req.file.originalname,
-        fileName: fileName,
-        filePath: filePath,
+      console.log('Upload process details:', {
+        userId,
+        fileName,
+        filePath,
         fullPath: req.file.path,
-        uploadDir: uploadDir
+        uploadDir,
+        fileSize: req.file.size,
+        mimeType: req.file.mimetype
       });
 
       // Delete all previous files for this user
@@ -223,15 +206,8 @@ class ProfileController {
         
         let deletedFiles = 0;
         for (const file of files) {
-          console.log(`Checking file: ${file}`);
-          console.log(`Current file starts with ${userId}-:`, file.startsWith(`${userId}-`));
-          console.log(`Current file !== ${fileName}:`, file !== fileName);
-          
-          // Check if the file belongs to this user (starts with userId-)
           if (file.startsWith(`${userId}-`) && file !== fileName) {
             const oldFilePath = path.join(uploadDir, file);
-            console.log(`Attempting to delete file: ${oldFilePath}`);
-            
             try {
               const fileExists = await fs.promises.access(oldFilePath)
                 .then(() => true)
@@ -239,16 +215,12 @@ class ProfileController {
                 
               if (fileExists) {
                 await fs.promises.unlink(oldFilePath);
-                console.log(`Successfully deleted file: ${oldFilePath}`);
+                console.log(`Successfully deleted old file: ${oldFilePath}`);
                 deletedFiles++;
-              } else {
-                console.log(`File does not exist: ${oldFilePath}`);
               }
             } catch (deleteError) {
               console.error(`Error deleting file ${oldFilePath}:`, deleteError);
             }
-          } else {
-            console.log(`Skipping file ${file} as it doesn't match criteria`);
           }
         }
         console.log(`Cleanup complete. Deleted ${deletedFiles} files.`);
@@ -258,10 +230,13 @@ class ProfileController {
 
       // Update profile with new photo path
       const updatedProfile = await profileService.updateProfile(userId, {
-        ProfilePicture: filePath
+        profilePicture: filePath
       });
 
-      console.log('Profile updated with new photo path:', filePath);
+      console.log('Profile update result:', {
+        filePath,
+        updatedProfilePicture: updatedProfile.ProfilePicture
+      });
 
       // Transform profile data
       const transformedProfile = {
@@ -281,12 +256,18 @@ class ProfileController {
         },
         dateOfBirth: updatedProfile.DateOfBirth,
         address: updatedProfile.Address,
-        avatar: updatedProfile.ProfilePicture,
+        profilePicture: updatedProfile.ProfilePicture,
         timestamps: {
           created: updatedProfile.CreatedAt,
           updated: updatedProfile.UpdatedAt
         }
       };
+
+      console.log('Response profile:', {
+        originalPath: filePath,
+        transformedPath: transformedProfile.profilePicture,
+        fullProfile: transformedProfile
+      });
 
       res.json({
         status: 'success',
@@ -330,25 +311,26 @@ class ProfileController {
         });
       }
 
-      // Get the latest file
-      const latestFile = userFiles[0];
-      const filePath = path.join(uploadDir, latestFile);
-
-      console.log('Attempting to delete latest file:', {
-        fileName: latestFile,
-        filePath: filePath
-      });
-
-      if (fs.existsSync(filePath)) {
-        await fs.promises.unlink(filePath);
-        console.log('Successfully deleted file:', filePath);
-      } else {
-        console.log('File not found:', filePath);
+      // Delete all files for this user
+      let deletedFiles = 0;
+      for (const file of userFiles) {
+        const filePath = path.join(uploadDir, file);
+        try {
+          if (fs.existsSync(filePath)) {
+            await fs.promises.unlink(filePath);
+            console.log('Successfully deleted file:', filePath);
+            deletedFiles++;
+          }
+        } catch (deleteError) {
+          console.error(`Error deleting file ${filePath}:`, deleteError);
+        }
       }
+
+      console.log(`Deleted ${deletedFiles} files`);
 
       // Update profile to remove photo reference
       const updatedProfile = await profileService.updateProfile(userId, {
-        ProfilePicture: null
+        profilePicture: null
       });
 
       // Transform the response
@@ -369,12 +351,15 @@ class ProfileController {
         },
         dateOfBirth: updatedProfile.DateOfBirth,
         address: updatedProfile.Address,
-        avatar: null,
+        profilePicture: null,
         timestamps: {
           created: updatedProfile.CreatedAt,
           updated: updatedProfile.UpdatedAt
         }
       };
+
+      // Invalidate any cached profile data
+      await cacheService.invalidateProfile(userId);
 
       res.json({
         status: 'success',

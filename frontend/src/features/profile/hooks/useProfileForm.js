@@ -27,6 +27,7 @@ export const useProfileForm = () => {
   // Load profile data
   useEffect(() => {
     if (!loading && profile) {
+      console.log('Updating form data with profile:', profile);
       setFormData(prevData => ({
         ...prevData,
         firstName: profile.name?.first || '',
@@ -38,7 +39,7 @@ export const useProfileForm = () => {
                     formatDateForUI(profile.dateOfBirth) : '',
         language: profile.preferences?.language || 'English',
         address: profile.address || '',
-        profilePicture: profile.avatar || null,
+        profilePicture: profile.profilePicture || null,
         ...(profile.emergencyContact && {
           emergencyName: profile.emergencyContact.contact?.name || '',
           emergencyPhone: profile.emergencyContact.contact?.phone || '',
@@ -168,32 +169,34 @@ export const useProfileForm = () => {
     try {
       setIsSaving(true);
       
-      // First, delete the existing photo if there is one
-      if (formData.profilePicture) {
-        try {
-          await profileService.deleteProfilePhoto();
-          console.log('Successfully deleted old profile photo');
-        } catch (error) {
-          console.error('Error deleting old profile photo:', error);
-          // Continue with upload even if delete fails
-        }
-      }
-
-      // Then upload the new photo
+      // Upload the new photo directly - the backend will handle old file cleanup
       const response = await profileService.uploadProfilePhoto(file);
-      const avatarPath = response.profile?.avatar;
-
-      if (avatarPath) {
+      
+      if (response.status === 'success' && response.profile) {
+        console.log('Photo upload response:', response);
+        
+        // Update form data with the new profile picture path
         setFormData(prev => ({
           ...prev,
-          profilePicture: avatarPath
+          profilePicture: response.profile.profilePicture
         }));
+        
+        // Refresh profile context immediately
         await refreshProfile();
+        
+        // Force a re-render of components using the profile picture
+        const event = new CustomEvent('profilePictureUpdated', { 
+          detail: { profilePicture: response.profile.profilePicture } 
+        });
+        window.dispatchEvent(event);
+        
         toast.success('Profile photo updated successfully');
       } else {
+        console.error('Failed to update profile photo:', response);
         toast.error('Failed to update profile photo');
       }
     } catch (error) {
+      console.error('Error in handlePhotoChange:', error);
       toast.error(error.message || 'Failed to upload profile photo');
       setError(error.message);
     } finally {
@@ -210,16 +213,29 @@ export const useProfileForm = () => {
         const response = await profileService.deleteProfilePhoto();
         
         if (response.status === 'success') {
-          // Update local state
+          console.log('Photo delete response:', response);
+          
+          // Immediately clear the profile picture from form data
           setFormData(prev => ({
             ...prev,
             profilePicture: null
           }));
           
-          // Refresh profile context to ensure UI is in sync
+          // Force immediate UI update
+          const event = new CustomEvent('profilePictureUpdated', { 
+            detail: { profilePicture: null } 
+          });
+          window.dispatchEvent(event);
+          
+          // Refresh profile context to ensure all components are updated
           await refreshProfile();
+          
+          // Force a re-render of the profile picture components
+          window.dispatchEvent(new Event('profileUpdated'));
+          
           toast.success('Profile photo deleted successfully');
         } else {
+          console.error('Failed to delete profile photo:', response);
           toast.error('Failed to delete profile photo');
         }
       } else {

@@ -1,7 +1,8 @@
-import React, { useRef } from 'react';
+import React, { useRef, useEffect } from 'react';
 import { Button } from 'react-bootstrap';
 import { FaCamera, FaTrash } from 'react-icons/fa';
 import { toast } from 'react-toastify';
+import { useProfile } from '../context/ProfileContext';
 
 // Default avatar as base64 string
 const defaultAvatar = 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxMDAiIGhlaWdodD0iMTAwIiB2aWV3Qm94PSIwIDAgMTAwIDEwMCI+PHJlY3Qgd2lkdGg9IjEwMCIgaGVpZ2h0PSIxMDAiIGZpbGw9IiNlMWU1ZWIiLz48Y2lyY2xlIGN4PSI1MCIgY3k9IjM3IiByPSIxNyIgZmlsbD0iI2IwYjZjMiIvPjxwYXRoIGQ9Ik0yMyw4NiBDMjMsNjggNDAsNTggNTAsNTggQzYwLDU4IDc3LDY4IDc3LDg2IiBmaWxsPSIjYjBiNmMyIi8+PC9zdmc+';
@@ -15,14 +16,44 @@ export const ProfileHeader = ({
   onDeletePhoto 
 }) => {
   const fileInputRef = useRef(null);
+  const { refreshProfile } = useProfile();
+
+  // Add useEffect for profile picture updates
+  useEffect(() => {
+    const handleProfilePictureUpdate = async (event) => {
+      console.log('Profile picture update event received:', event.detail);
+      // Instead of directly updating formData, refresh the profile
+      await refreshProfile();
+    };
+
+    window.addEventListener('profilePictureUpdated', handleProfilePictureUpdate);
+    return () => {
+      window.removeEventListener('profilePictureUpdated', handleProfilePictureUpdate);
+    };
+  }, [refreshProfile]);
 
   const getProfilePictureUrl = (path) => {
-    if (!path) return defaultAvatar;
-    if (path.startsWith('http')) return path;
+    console.log('Raw profile picture path:', path);
     
-    // The backend returns paths like /api/uploads/profiles/filename.jpg
-    // We just need to append it to the API_URL
-    return `${API_URL}${path}`;
+    if (!path) {
+      console.log('No path provided, using default avatar');
+      return defaultAvatar;
+    }
+    
+    if (path.startsWith('http')) {
+      console.log('Using full URL:', path);
+      return path;
+    }
+    
+    // Clean up the path and ensure it starts with a forward slash
+    const cleanPath = path.replace(/^\/+/, '').replace(/\/+/g, '/');
+    const url = `${API_URL}/${cleanPath}`;
+    
+    console.log('API_URL:', API_URL);
+    console.log('Clean path:', cleanPath);
+    console.log('Final URL:', url);
+    
+    return url;
   };
 
   const handleImageError = (e) => {
