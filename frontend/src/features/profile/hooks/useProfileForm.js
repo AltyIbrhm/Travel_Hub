@@ -4,6 +4,7 @@ import { toast } from 'react-toastify';
 import { useProfile } from '../context/ProfileContext';
 
 export const useProfileForm = () => {
+  const { profile, loading, refreshProfile } = useProfile();
   const [formData, setFormData] = useState({
     firstName: '',
     lastName: '',
@@ -18,102 +19,34 @@ export const useProfileForm = () => {
     profilePicture: null
   });
 
-  const [loading, setLoading] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState(null);
-  const [photoFile, setPhotoFile] = useState(null);
   const saveTimeoutRef = useRef(null);
   const lastUpdateTimeRef = useRef(0);
-  const { refreshProfile } = useProfile();
-
+  
   // Load profile data
   useEffect(() => {
-    loadProfile();
-  }, []);
-
-  const loadProfile = async () => {
-    try {
-      setLoading(true);
-      const data = await profileService.getProfile();
-      
-      // Get user data from localStorage
-      const userEmail = localStorage.getItem('userEmail');
-      const userFirstName = localStorage.getItem('firstName');
-      const userLastName = localStorage.getItem('lastName');
-      
-      if (!data.profile) {
-        try {
-          const response = await profileService.updateProfile({
-            firstName: userFirstName || '',
-            lastName: userLastName || '',
-            email: userEmail || '',
-            phoneNumber: '',
-            dateOfBirth: null,
-            language: 'English',
-            address: ''
-          });
-          
-          if (response.profile) {
-            setFormData(prevData => ({
-              ...prevData,
-              firstName: response.profile.name.first || userFirstName || '',
-              lastName: response.profile.name.last || userLastName || '',
-              email: response.profile.contact.email || userEmail || '',
-              phoneNumber: response.profile.contact.phone || '',
-              dateOfBirth: response.profile.dateOfBirth && 
-                          response.profile.dateOfBirth !== '1970-01-01' ? 
-                          formatDateForUI(response.profile.dateOfBirth) : '',
-              language: response.profile.preferences.language || 'English',
-              address: response.profile.address || '',
-              profilePicture: response.profile.avatar || null
-            }));
-          }
-        } catch (createError) {
-          setError('Failed to create profile');
-        }
-      } else {
-        const profilePicture = data.profile.avatar || null;
-        
-        setFormData(prevData => {
-          const newData = {
-            ...prevData,
-            firstName: data.profile.name.first || userFirstName || '',
-            lastName: data.profile.name.last || userLastName || '',
-            email: data.profile.contact.email || userEmail || '',
-            phoneNumber: data.profile.contact.phone || '',
-            dateOfBirth: data.profile.dateOfBirth && 
-                        data.profile.dateOfBirth !== '1970-01-01' ? 
-                        formatDateForUI(data.profile.dateOfBirth) : '',
-            language: data.profile.preferences.language || 'English',
-            address: data.profile.address || '',
-            profilePicture,
-            ...(data.emergencyContact && {
-              emergencyName: data.emergencyContact.contact.name || '',
-              emergencyPhone: data.emergencyContact.contact.phone || '',
-              emergencyRelationship: data.emergencyContact.contact.relationship || ''
-            })
-          };
-          return newData;
-        });
-
-        // If profile has empty values, update it with user data
-        if (!data.profile.name.first && userFirstName) {
-          await profileService.updateProfile({
-            firstName: userFirstName,
-            lastName: userLastName,
-            email: userEmail,
-            phoneNumber: data.profile.contact.phone || '',
-            dateOfBirth: data.profile.dateOfBirth || '',
-            language: data.profile.preferences.language || 'English',
-            address: data.profile.address || ''
-          });
-        }
-      }
-    } catch (error) {
-      setError(error.message || 'Failed to load profile data');
-    } finally {
-      setLoading(false);
+    if (!loading && profile) {
+      setFormData(prevData => ({
+        ...prevData,
+        firstName: profile.name?.first || '',
+        lastName: profile.name?.last || '',
+        email: profile.contact?.email || '',
+        phoneNumber: profile.contact?.phone || '',
+        dateOfBirth: profile.dateOfBirth && 
+                    profile.dateOfBirth !== '1970-01-01' ? 
+                    formatDateForUI(profile.dateOfBirth) : '',
+        language: profile.preferences?.language || 'English',
+        address: profile.address || '',
+        profilePicture: profile.avatar || null,
+        ...(profile.emergencyContact && {
+          emergencyName: profile.emergencyContact.contact?.name || '',
+          emergencyPhone: profile.emergencyContact.contact?.phone || '',
+          emergencyRelationship: profile.emergencyContact.contact?.relationship || ''
+        })
+      }));
     }
-  };
+  }, [profile, loading]);
 
   // Validate phone number format
   const isValidPhone = (phone) => {
@@ -233,7 +166,7 @@ export const useProfileForm = () => {
 
   const handlePhotoChange = async (file) => {
     try {
-      setLoading(true);
+      setIsSaving(true);
       const response = await profileService.uploadProfilePhoto(file);
       const avatarPath = response.profile?.avatar;
 
@@ -247,13 +180,13 @@ export const useProfileForm = () => {
       toast.error(error.message || 'Failed to upload profile photo');
       setError(error.message);
     } finally {
-      setLoading(false);
+      setIsSaving(false);
     }
   };
 
   const handleDeletePhoto = async () => {
     try {
-      setLoading(true);
+      setIsSaving(true);
       await profileService.deleteProfilePhoto();
       setFormData(prev => ({
         ...prev,
@@ -265,7 +198,7 @@ export const useProfileForm = () => {
       toast.error(error.message || 'Failed to delete profile photo');
       setError(error.message);
     } finally {
-      setLoading(false);
+      setIsSaving(false);
     }
   };
 
@@ -316,7 +249,7 @@ export const useProfileForm = () => {
     }
 
     try {
-      setLoading(true);
+      setIsSaving(true);
 
       // Update profile
       const profileData = {
@@ -356,18 +289,18 @@ export const useProfileForm = () => {
       setError(error.message || 'Failed to update profile');
       toast.error(error.message || 'Failed to update profile');
     } finally {
-      setLoading(false);
+      setIsSaving(false);
     }
   };
 
   const handleEmergencyContactUpdate = async (data) => {
     try {
       // Check if we're already loading
-      if (loading) {
+      if (isSaving) {
         return;
       }
 
-      setLoading(true);
+      setIsSaving(true);
       setError(null);
 
       // Get the values from the form data
@@ -417,13 +350,14 @@ export const useProfileForm = () => {
         toast.error(error.message || 'Failed to update emergency contact');
       }
     } finally {
-      setLoading(false);
+      setIsSaving(false);
     }
   };
 
   return {
     formData,
     loading,
+    isSaving,
     error,
     handleChange,
     handleSubmit,
