@@ -36,20 +36,11 @@ try {
     fs.mkdirSync(profilesDir, { recursive: true });
   }
 } catch (err) {
-  // Log error to error reporting service in production
-  process.env.NODE_ENV === 'development' && console.error('Error creating upload directories:', err);
+  console.error('Error creating upload directories:', err);
 }
 
-// Enable CORS with specific options
-app.use(cors({
-  origin: process.env.FRONTEND_URL || 'http://localhost:3000',
-  credentials: true,
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization']
-}));
-
 // Serve static files from the uploads directory
-app.use('/api/uploads', express.static(path.join(__dirname, 'uploads')));
+app.use('/api/uploads', express.static(uploadsDir));
 
 // API Documentation
 app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpecs));
