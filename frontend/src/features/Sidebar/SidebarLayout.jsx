@@ -1,10 +1,12 @@
 import React from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useSidebar } from './context/SidebarContext';
+import { useProfile } from '../../features/profile/context/ProfileContext';
 import '../../styles/components/_sidebar.css';
 
 const SidebarLayout = () => {
   const { isCollapsed, toggleSidebar } = useSidebar();
+  const { profile, getProfilePictureUrl } = useProfile();
   const location = useLocation();
   const navigate = useNavigate();
 
@@ -134,9 +136,15 @@ const SidebarLayout = () => {
 
       <div className="sidebar-content">
         <div className="user-info">
-          <img src="https://via.placeholder.com/40" alt="User" className="user-avatar" />
+          <img 
+            src={getProfilePictureUrl(profile?.avatar)} 
+            alt={profile?.name?.first || 'User'} 
+            className="user-avatar" 
+          />
           <div className="user-details">
-            <span className="user-name">Ibrahim altay</span>
+            <span className="user-name">
+              {profile ? `${profile.name?.first || ''} ${profile.name?.last || ''}` : 'Loading...'}
+            </span>
             <span className="user-role">Passenger</span>
           </div>
         </div>
