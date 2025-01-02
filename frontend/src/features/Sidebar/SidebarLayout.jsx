@@ -4,6 +4,9 @@ import { useSidebar } from './context/SidebarContext';
 import { useProfile } from '../../features/profile/context/ProfileContext';
 import '../../styles/components/_sidebar.css';
 
+// Default avatar as base64 string
+const defaultAvatar = 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxMDAiIGhlaWdodD0iMTAwIiB2aWV3Qm94PSIwIDAgMTAwIDEwMCI+PHJlY3Qgd2lkdGg9IjEwMCIgaGVpZ2h0PSIxMDAiIGZpbGw9IiNlMWU1ZWIiLz48Y2lyY2xlIGN4PSI1MCIgY3k9IjM3IiByPSIxNyIgZmlsbD0iI2IwYjZjMiIvPjxwYXRoIGQ9Ik0yMyw4NiBDMjMsNjggNDAsNTggNTAsNTggQzYwLDU4IDc3LDY4IDc3LDg2IiBmaWxsPSIjYjBiNmMyIi8+PC9zdmc+';
+
 const SidebarLayout = () => {
   const { isCollapsed, toggleSidebar } = useSidebar();
   const { profile, loading, getProfilePictureUrl } = useProfile();
@@ -137,9 +140,9 @@ const SidebarLayout = () => {
       <div className="sidebar-content">
         <div className="user-info">
           <img 
-            src={getProfilePictureUrl(profile?.avatar)} 
+            src={profile?.profilePicture ? getProfilePictureUrl(profile.profilePicture) : defaultAvatar}
             alt={profile?.name?.first || 'User'} 
-            className="user-avatar" 
+            className="user-avatar"
           />
           <div className="user-details">
             <span className="user-name">

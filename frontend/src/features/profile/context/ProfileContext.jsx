@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState, useCallback, useEffect } from 'react';
 import { profileService } from '../services/profileService';
 
 // Default avatar as base64 string
@@ -8,97 +8,108 @@ const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000';
 
 const ProfileContext = createContext();
 
-export const useProfile = () => {
-  const context = useContext(ProfileContext);
-  if (!context) {
-    throw new Error('useProfile must be used within a ProfileProvider');
-  }
-  return context;
-};
-
 export const ProfileProvider = ({ children }) => {
   const [profile, setProfile] = useState(null);
   const [loading, setLoading] = useState(true);
 
-  const getProfilePictureUrl = (path) => {
-    console.log('getProfilePictureUrl input path:', path);
-    
-    if (!path) {
-      console.log('No path provided, using default avatar');
-      return defaultAvatar;
-    }
-    
-    if (path.startsWith('http')) {
-      console.log('Using full URL:', path);
-      return path;
-    }
-    
-    // Remove any leading /api prefix
-    const cleanPath = path.replace(/^\/api/, '');
-    const url = `${API_URL}${cleanPath}`;
-    
-    console.log('getProfilePictureUrl constructed URL:', url);
-    return url;
+  const transformProfileData = (data) => {
+    if (!data) return null;
+
+    // Log the raw data structure
+    console.log('Raw data structure:', JSON.stringify(data, null, 2));
+
+    // Get the profile data (handle both nested and flat structures)
+    const profileData = data.profile || data;
+    console.log('Profile data:', profileData);
+
+    const transformedData = {
+      id: profileData.id,
+      userId: profileData.userId,
+      name: {
+        first: profileData.name?.first || '',
+        last: profileData.name?.last || '',
+      },
+      contact: {
+        email: profileData.contact?.email || '',
+        phone: profileData.contact?.phone || ''
+      },
+      preferences: {
+        language: profileData.preferences?.language || 'English'
+      },
+      profilePicture: profileData.profilePicture,
+      dateOfBirth: profileData.dateOfBirth || '',
+      address: profileData.address || '',
+      emergencyContact: profileData.emergencyContact || null
+    };
+
+    console.log('Transformed data:', JSON.stringify(transformedData, null, 2));
+    return transformedData;
   };
 
   const refreshProfile = async () => {
     try {
       setLoading(true);
       const response = await profileService.getProfile();
+      console.log('Profile service response:', response);
       
-      if (response.profile) {
-        // Transform the profile data to ensure consistent structure
-        const profileData = {
-          ...response.profile,
-          name: {
-            first: response.profile.name?.first || '',
-            last: response.profile.name?.last || '',
-            full: `${response.profile.name?.first || ''} ${response.profile.name?.last || ''}`.trim()
-          },
-          contact: {
-            email: response.profile.contact?.email || '',
-            phone: response.profile.contact?.phone || ''
-          },
-          preferences: {
-            language: response.profile.preferences?.language || 'English'
-          },
-          profilePicture: response.profile.profilePicture || null,
-          dateOfBirth: response.profile.dateOfBirth || '',
-          address: response.profile.address || ''
-        };
-        
-        console.log('Setting profile data:', profileData);
-        setProfile(profileData);
-        
-        // Dispatch an event to notify other components
-        const event = new CustomEvent('profileUpdated', { 
-          detail: { profile: profileData } 
-        });
-        window.dispatchEvent(event);
-      } else {
-        console.log('No profile data received');
-        setProfile(null);
+      if (response) {
+        const transformedData = transformProfileData(response);
+        setProfile(transformedData);
       }
     } catch (error) {
-      console.error('Error fetching profile:', error);
+      console.error('Error refreshing profile:', error);
       setProfile(null);
     } finally {
       setLoading(false);
     }
   };
 
+  const getProfilePictureUrl = useCallback((path) => {
+    if (!path) {
+      return defaultAvatar;
+    }
+    
+    // If it's already a full URL, return it
+    if (path.startsWith('http')) {
+      return path;
+    }
+    
+    // Clean the path and ensure proper structure
+    const cleanPath = path.replace(/^\/+/, '');
+    const fullUrl = `${API_URL}/${cleanPath}`;
+    
+    console.log('Profile picture URL:', {
+      path,
+      cleanPath,
+      fullUrl
+    });
+    
+    return fullUrl;
+  }, []);
+
+  // Load profile data when component mounts
   useEffect(() => {
     refreshProfile();
   }, []);
 
   return (
-    <ProfileContext.Provider value={{ 
-      profile, 
-      loading, 
-      refreshProfile,
-      getProfilePictureUrl 
-    }}>
+    <ProfileContext.Provider
+      value={{
+        profile,
+        loading,
+        refreshProfile,
+        getProfilePictureUrl
+      }}
+    >
       {children}
     </ProfileContext.Provider>
   );
+};
+
+export const useProfile = () => {
+  const context = useContext(ProfileContext);
+  if (!context) {
+    throw new Error('useProfile must be used within a ProfileProvider');
+  }
+  return context;
 }; 

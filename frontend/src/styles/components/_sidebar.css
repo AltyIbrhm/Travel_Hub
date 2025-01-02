@@ -71,20 +71,21 @@
 }
 
 .user-info {
-  padding: 0 16px;
-  margin-bottom: 24px;
+  padding: 16px;
   display: flex;
   align-items: center;
   gap: 12px;
+  border-bottom: 1px solid var(--border-color);
 }
 
 .collapsed .user-info {
   justify-content: center;
+  padding: 16px 0;
 }
 
 .user-avatar {
-  width: 40px;
-  height: 40px;
+  width: 32px;
+  height: 32px;
   border-radius: 50%;
   object-fit: cover;
 }
@@ -92,6 +93,7 @@
 .user-details {
   display: flex;
   flex-direction: column;
+  gap: 2px;
 }
 
 .collapsed .user-details {
@@ -99,13 +101,13 @@
 }
 
 .user-name {
-  font-size: 14px;
+  font-size: 13px;
   font-weight: 600;
   color: var(--text-primary);
 }
 
 .user-role {
-  font-size: 12px;
+  font-size: 11px;
   color: var(--text-secondary);
 }
 

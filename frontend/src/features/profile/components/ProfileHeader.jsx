@@ -16,13 +16,10 @@ export const ProfileHeader = ({
   onDeletePhoto 
 }) => {
   const fileInputRef = useRef(null);
-  const { refreshProfile } = useProfile();
+  const { refreshProfile, getProfilePictureUrl } = useProfile();
 
-  // Add useEffect for profile picture updates
   useEffect(() => {
-    const handleProfilePictureUpdate = async (event) => {
-      console.log('Profile picture update event received:', event.detail);
-      // Instead of directly updating formData, refresh the profile
+    const handleProfilePictureUpdate = async () => {
       await refreshProfile();
     };
 
@@ -32,33 +29,9 @@ export const ProfileHeader = ({
     };
   }, [refreshProfile]);
 
-  const getProfilePictureUrl = (path) => {
-    console.log('Raw profile picture path:', path);
-    
-    if (!path) {
-      console.log('No path provided, using default avatar');
-      return defaultAvatar;
-    }
-    
-    if (path.startsWith('http')) {
-      console.log('Using full URL:', path);
-      return path;
-    }
-    
-    // Clean up the path and ensure it starts with a forward slash
-    const cleanPath = path.replace(/^\/+/, '').replace(/\/+/g, '/');
-    const url = `${API_URL}/${cleanPath}`;
-    
-    console.log('API_URL:', API_URL);
-    console.log('Clean path:', cleanPath);
-    console.log('Final URL:', url);
-    
-    return url;
-  };
-
   const handleImageError = (e) => {
     e.target.src = defaultAvatar;
-    e.target.onerror = null; // Prevent infinite loop if defaultAvatar also fails
+    e.target.onerror = null;
   };
 
   const handlePhotoClick = () => {
@@ -77,7 +50,7 @@ export const ProfileHeader = ({
     }
 
     // Validate file size (5MB limit)
-    const maxSize = 5 * 1024 * 1024; // 5MB in bytes
+    const maxSize = 5 * 1024 * 1024;
     if (file.size > maxSize) {
       toast.error('File size must be less than 5MB');
       return;
@@ -85,7 +58,6 @@ export const ProfileHeader = ({
 
     try {
       onPhotoChange(file);
-      // Clear the input value to allow uploading the same file again
       e.target.value = '';
     } catch (error) {
       toast.error('Failed to process the selected file');
