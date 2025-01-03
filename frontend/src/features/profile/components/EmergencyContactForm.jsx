@@ -65,32 +65,19 @@ export const EmergencyContactForm = ({ formData, onChange }) => {
   const handleSubmit = async () => {
     if (loading) return;
 
-    // Validate required fields
+    // Only validate name field
     if (!localFormData.emergencyName?.trim()) {
       toast.error('Emergency contact name is required');
-      return;
-    }
-
-    if (!localFormData.emergencyPhone?.trim()) {
-      toast.error('Emergency contact phone is required');
-      return;
-    }
-
-    if (!localFormData.emergencyRelationship) {
-      toast.error('Please select a relationship');
       return;
     }
 
     try {
       setLoading(true);
       
-      // Format phone number to remove formatting characters
-      const formattedPhone = localFormData.emergencyPhone.replace(/[^0-9]/g, '');
-      
       const contactData = {
         emergencyName: localFormData.emergencyName.trim(),
-        emergencyPhone: formattedPhone,
-        emergencyRelationship: localFormData.emergencyRelationship
+        emergencyPhone: localFormData.emergencyPhone?.trim() || '',
+        emergencyRelationship: localFormData.emergencyRelationship || ''
       };
 
       const response = await profileService.updateEmergencyContact(contactData);
@@ -100,10 +87,8 @@ export const EmergencyContactForm = ({ formData, onChange }) => {
         // Update parent form data if needed
         if (onChange) {
           Object.entries(contactData).forEach(([key, value]) => {
-            // If it's the phone number, use the formatted display version
-            const displayValue = key === 'emergencyPhone' ? localFormData.emergencyPhone : value;
             onChange({
-              target: { name: key, value: displayValue }
+              target: { name: key, value }
             });
           });
         }
@@ -141,6 +126,7 @@ export const EmergencyContactForm = ({ formData, onChange }) => {
               onBlur={handleBlur}
               className="profile-input"
               placeholder="Enter emergency contact name"
+              required
             />
           </Form.Group>
 

@@ -27,8 +27,8 @@ export const useProfileForm = () => {
   // Load profile data
   useEffect(() => {
     if (!loading && profile) {
-      setFormData(prevData => ({
-        ...prevData,
+      // Create the form data with all fields
+      const newFormData = {
         firstName: profile.name?.first || '',
         lastName: profile.name?.last || '',
         email: profile.contact?.email || '',
@@ -39,12 +39,13 @@ export const useProfileForm = () => {
         language: profile.preferences?.language || 'English',
         address: profile.address || '',
         profilePicture: profile.profilePicture || null,
-        ...(profile.emergencyContact && {
-          emergencyName: profile.emergencyContact.contact?.name || '',
-          emergencyPhone: profile.emergencyContact.contact?.phone || '',
-          emergencyRelationship: profile.emergencyContact.contact?.relationship || ''
-        })
-      }));
+        // Set emergency contact fields
+        emergencyName: profile.emergencyName || '',
+        emergencyPhone: profile.emergencyPhone || '',
+        emergencyRelationship: profile.emergencyRelationship || ''
+      };
+
+      setFormData(newFormData);
     }
   }, [profile, loading]);
 
@@ -310,24 +311,27 @@ export const useProfileForm = () => {
       }
 
       const emergencyContactData = {
-        contact: {
-          name,
-          phone,
-          relationship
-        }
+        emergencyName: name,
+        emergencyPhone: phone,
+        emergencyRelationship: relationship
       };
 
       const response = await profileService.updateEmergencyContact(emergencyContactData);
       
-      if (response && response.contact) {
+      if (response) {
         lastUpdateTimeRef.current = Date.now();
         
+        // Update form data with the response
         setFormData(prev => ({
           ...prev,
-          emergencyName: response.contact.name || '',
-          emergencyPhone: response.contact.phone || '',
-          emergencyRelationship: response.contact.relationship || ''
+          emergencyName: name,
+          emergencyPhone: phone,
+          emergencyRelationship: relationship
         }));
+
+        // Refresh profile to ensure we have the latest data
+        await refreshProfile();
+        
         toast.success('Emergency contact updated successfully');
       }
     } catch (error) {

@@ -15,13 +15,10 @@ export const ProfileProvider = ({ children }) => {
   const transformProfileData = (data) => {
     if (!data) return null;
 
-    // Log the raw data structure
-
-
     // Get the profile data (handle both nested and flat structures)
     const profileData = data.profile || data;
 
-
+    // Create the base transformed data
     const transformedData = {
       id: profileData.id,
       userId: profileData.userId,
@@ -39,9 +36,11 @@ export const ProfileProvider = ({ children }) => {
       profilePicture: profileData.profilePicture,
       dateOfBirth: profileData.dateOfBirth || '',
       address: profileData.address || '',
-      emergencyContact: profileData.emergencyContact || null
+      // Handle emergency contact data
+      emergencyName: profileData.emergencyName || '',
+      emergencyPhone: profileData.emergencyPhone || '',
+      emergencyRelationship: profileData.emergencyRelationship || ''
     };
-
 
     return transformedData;
   };

@@ -16,7 +16,11 @@ class ProfileController {
     try {
       const userId = req.user.id;
       
-      const profile = await profileService.getProfile(userId);
+      // Get both profile and emergency contact data
+      const [profile, emergencyContact] = await Promise.all([
+        profileService.getProfile(userId),
+        emergencyContactService.getEmergencyContact(userId)
+      ]);
       
       if (!profile) {
         return res.status(404).json({
@@ -24,6 +28,8 @@ class ProfileController {
           message: 'Profile not found'
         });
       }
+
+      console.log('Retrieved emergency contact:', emergencyContact);
 
       // Transform profile data consistently
       const transformedProfile = {
@@ -44,13 +50,17 @@ class ProfileController {
         dateOfBirth: profile.DateOfBirth,
         address: profile.Address,
         profilePicture: profile.ProfilePicture,
+        // Include emergency contact data with exact field names
+        emergencyName: emergencyContact?.EmergencyName || '',
+        emergencyPhone: emergencyContact?.EmergencyPhone || '',
+        emergencyRelationship: emergencyContact?.EmergencyRelationship || '',
         timestamps: {
           created: profile.CreatedAt,
           updated: profile.UpdatedAt
         }
       };
 
-   
+      console.log('Sending transformed profile with emergency data:', transformedProfile);
 
       res.json({
         status: 'success',
@@ -106,30 +116,56 @@ class ProfileController {
   async updateEmergencyContact(req, res) {
     try {
       const userId = req.user.id;
+      
+      // Validate required fields
+      if (!req.body.emergencyName?.trim()) {
+        return res.status(400).json({
+          status: 'error',
+          message: 'Emergency contact name is required'
+        });
+      }
+
+      // Use the same valid relationships as defined in the database constraint
+      const validRelationships = ['Parent', 'Spouse', 'Sibling', 'Friend', 'Other'];
+      const defaultRelationship = 'Other';
+
+      console.log('Received relationship:', req.body.emergencyRelationship);
+      
       const contactData = {
         userId,
-        emergencyName: req.body.emergencyName,
-        emergencyPhone: req.body.emergencyPhone,
-        emergencyRelationship: req.body.emergencyRelationship
+        emergencyName: req.body.emergencyName.trim(),
+        emergencyPhone: req.body.emergencyPhone?.trim() || '',
+        emergencyRelationship: validRelationships.includes(req.body.emergencyRelationship)
+          ? req.body.emergencyRelationship
+          : defaultRelationship
       };
+
+      console.log('Processing emergency contact update with data:', contactData);
 
       let contact = await emergencyContactService.getEmergencyContact(userId);
       
       if (contact) {
+        console.log('Updating existing emergency contact:', contact);
         contact = await emergencyContactService.updateEmergencyContact(userId, contactData);
       } else {
+        console.log('Creating new emergency contact');
         contact = await emergencyContactService.createEmergencyContact(contactData);
       }
 
       // Invalidate cache
       await cacheService.invalidateEmergencyContact(userId);
 
-      res.json(transformEmergencyContactResponse(contact));
+      console.log('Emergency contact saved:', contact);
+
+      res.json({
+        status: 'success',
+        contact: contact
+      });
     } catch (error) {
       console.error('Error in updateEmergencyContact controller:', error);
       res.status(500).json({
         status: 'error',
-        message: 'Internal server error'
+        message: error.message || 'Internal server error'
       });
     }
   }

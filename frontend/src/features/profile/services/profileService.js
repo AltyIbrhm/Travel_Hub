@@ -48,7 +48,10 @@ export const profileService = {
       if (!response.data || (!response.data.profile && !response.data.message)) {
         return { profile: null, message: 'Invalid profile data received' };
       }
-      
+
+
+
+      // Return the data as-is since the backend now provides the correct structure
       return response.data;
     } catch (error) {
       if (error.response?.status === 404) {
@@ -85,14 +88,11 @@ export const profileService = {
   // Update emergency contact
   async updateEmergencyContact(contactData) {
     try {
-      // Format phone number to match required format
-      const formattedPhone = contactData.emergencyPhone.replace(/(\d{3})(\d{3})(\d{4})/, '($1) $2-$3');
-
       // Send data in the format expected by backend validation
       const requestData = {
-        emergencyName: contactData.emergencyName,
-        emergencyPhone: formattedPhone,
-        emergencyRelationship: contactData.emergencyRelationship
+        emergencyName: contactData.emergencyName?.trim(),
+        emergencyPhone: contactData.emergencyPhone?.trim() || '',
+        emergencyRelationship: contactData.emergencyRelationship || ''
       };
 
       const response = await api.put('/profile/emergency-contact', requestData);
@@ -101,7 +101,17 @@ export const profileService = {
         throw new Error('No response data received');
       }
 
-      return response.data;
+      // Transform the response to match frontend field names
+      const transformedResponse = {
+        ...response.data,
+        contact: {
+          emergencyName: response.data.contact.EmergencyName || '',
+          emergencyPhone: response.data.contact.EmergencyPhone || '',
+          emergencyRelationship: response.data.contact.EmergencyRelationship || ''
+        }
+      };
+
+      return transformedResponse;
     } catch (error) {
       if (error.response?.status === 400) {
         const errorMessage = error.response.data?.message || 'Invalid emergency contact data';
