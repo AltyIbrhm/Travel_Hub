@@ -16,11 +16,11 @@ export const ProfileProvider = ({ children }) => {
     if (!data) return null;
 
     // Log the raw data structure
-    console.log('Raw data structure:', JSON.stringify(data, null, 2));
+
 
     // Get the profile data (handle both nested and flat structures)
     const profileData = data.profile || data;
-    console.log('Profile data:', profileData);
+
 
     const transformedData = {
       id: profileData.id,
@@ -42,7 +42,7 @@ export const ProfileProvider = ({ children }) => {
       emergencyContact: profileData.emergencyContact || null
     };
 
-    console.log('Transformed data:', JSON.stringify(transformedData, null, 2));
+
     return transformedData;
   };
 
@@ -50,7 +50,7 @@ export const ProfileProvider = ({ children }) => {
     try {
       setLoading(true);
       const response = await profileService.getProfile();
-      console.log('Profile service response:', response);
+
       
       if (response) {
         const transformedData = transformProfileData(response);
@@ -78,11 +78,7 @@ export const ProfileProvider = ({ children }) => {
     const cleanPath = path.replace(/^\/+/, '');
     const fullUrl = `${API_URL}/${cleanPath}`;
     
-    console.log('Profile picture URL:', {
-      path,
-      cleanPath,
-      fullUrl
-    });
+
     
     return fullUrl;
   }, []);
