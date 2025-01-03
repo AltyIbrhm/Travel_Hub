@@ -15,7 +15,6 @@ class ProfileController {
   async getProfile(req, res) {
     try {
       const userId = req.user.id;
-      console.log('Getting profile for user:', userId);
       
       const profile = await profileService.getProfile(userId);
       
@@ -51,7 +50,7 @@ class ProfileController {
         }
       };
 
-      console.log('Transformed profile:', transformedProfile);
+   
 
       res.json({
         status: 'success',
