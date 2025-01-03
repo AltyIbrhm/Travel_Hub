@@ -1,7 +1,25 @@
 const transformProfileResponse = (profile) => {
   if (!profile) return null;
   
+  // Helper function to format date to DD/MM/YYYY
+  const formatDate = (date) => {
+    if (!date) return '';
+    
+    try {
+      const d = new Date(date);
+      if (isNaN(d.getTime())) return '';
+      
+      const day = String(d.getDate()).padStart(2, '0');
+      const month = String(d.getMonth() + 1).padStart(2, '0');
+      const year = d.getFullYear();
+      return `${day}/${month}/${year}`;
+    } catch (e) {
+      return '';
+    }
+  };
+  
   return {
+    status: 'success',
     profile: {
       id: profile.ProfileID,
       userId: profile.UserID,
@@ -17,9 +35,9 @@ const transformProfileResponse = (profile) => {
       preferences: {
         language: profile.Language || 'English'
       },
-      dateOfBirth: profile.DateOfBirth ? new Date(profile.DateOfBirth).toISOString().split('T')[0] : '',
+      dateOfBirth: formatDate(profile.DateOfBirth),
       address: profile.Address || '',
-      avatar: profile.ProfilePicture || null,
+      profilePicture: profile.ProfilePicture || null,
       timestamps: {
         created: profile.CreatedAt,
         updated: profile.UpdatedAt

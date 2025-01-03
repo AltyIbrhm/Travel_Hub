@@ -70,6 +70,29 @@ export const profileService = {
         throw new Error('No response data received from server');
       }
 
+      if (response.data.status === 'success' && response.data.profile) {
+        return {
+          name: {
+            first: response.data.profile.name?.first || '',
+            last: response.data.profile.name?.last || '',
+            full: response.data.profile.name?.full || ''
+          },
+          contact: {
+            email: response.data.profile.contact?.email || '',
+            phone: response.data.profile.contact?.phone || ''
+          },
+          preferences: {
+            language: response.data.profile.preferences?.language || 'English'
+          },
+          dateOfBirth: response.data.profile.dateOfBirth || '',
+          address: response.data.profile.address || '',
+          profilePicture: response.data.profile.profilePicture,
+          emergencyName: response.data.profile.emergencyName || '',
+          emergencyPhone: response.data.profile.emergencyPhone || '',
+          emergencyRelationship: response.data.profile.emergencyRelationship || ''
+        };
+      }
+
       return response.data;
     } catch (error) {
       // Handle specific error cases

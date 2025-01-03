@@ -33,9 +33,7 @@ export const useProfileForm = () => {
         lastName: profile.name?.last || '',
         email: profile.contact?.email || '',
         phoneNumber: profile.contact?.phone || '',
-        dateOfBirth: profile.dateOfBirth && 
-                    profile.dateOfBirth !== '1970-01-01' ? 
-                    formatDateForUI(profile.dateOfBirth) : '',
+        dateOfBirth: formatDateForUI(profile.dateOfBirth),
         language: profile.preferences?.language || 'English',
         address: profile.address || '',
         profilePicture: profile.profilePicture || null,
@@ -63,39 +61,38 @@ export const useProfileForm = () => {
   };
 
   const formatDateForBackend = (date) => {
-    if (!date) return '';
+    if (!date) return null;
     
+    // If already in YYYY-MM-DD format, return as is
     if (/^\d{4}-\d{2}-\d{2}$/.test(date)) {
-      const [year, month, day] = date.split('-');
-      return `${year}-${month}-${day}`;
+      return date;
     }
 
+    // Convert DD/MM/YYYY to YYYY-MM-DD
     const [day, month, year] = date.split('/');
     return `${year}-${month}-${day}`;
   };
 
   const formatDateForUI = (date) => {
-    if (!date || date === '1970-01-01' || date === '0000-00-00') {
+    if (!date) return '';
+    
+    try {
+      // Handle ISO date string
+      const d = new Date(date);
+      if (isNaN(d.getTime())) return '';
+      
+      // Check if it's the default date
+      if (d.getFullYear() === 1970 && d.getMonth() === 0 && d.getDate() === 1) {
+        return '';
+      }
+      
+      const day = String(d.getUTCDate()).padStart(2, '0');
+      const month = String(d.getUTCMonth() + 1).padStart(2, '0');
+      const year = d.getUTCFullYear();
+      return `${day}/${month}/${year}`;
+    } catch (e) {
       return '';
     }
-
-    if (/^\d{4}-\d{2}-\d{2}$/.test(date)) {
-      const [year, month, day] = date.split('-');
-      if (year === '1970' && month === '01' && day === '01') {
-        return '';
-      }
-      return `${day}/${month}/${year}`;
-    }
-
-    if (/^\d{2}\/\d{2}\/\d{4}$/.test(date)) {
-      const [day, month, year] = date.split('/');
-      if (year === '1970' && month === '01' && day === '01') {
-        return '';
-      }
-      return date;
-    }
-
-    return '';
   };
 
   const handleChange = (e) => {
@@ -105,19 +102,42 @@ export const useProfileForm = () => {
       clearTimeout(saveTimeoutRef.current);
     }
 
+    // Update local form state immediately
     setFormData(prevData => ({
       ...prevData,
       [name]: value
     }));
 
+    // Don't auto-save for emergency contact fields
     if (name.startsWith('emergency')) {
       return;
     }
 
+    // Debounce the save operation
     saveTimeoutRef.current = setTimeout(async () => {
-      const updatedData = { ...formData, [name]: value };
-      await handleSubmit(updatedData);
-      await refreshProfile();
+      try {
+        const currentFormData = { ...formData, [name]: value };
+        
+        const profileData = {
+          firstName: currentFormData.firstName,
+          lastName: currentFormData.lastName,
+          email: currentFormData.email,
+          phoneNumber: currentFormData.phoneNumber || '',
+          dateOfBirth: formatDateForBackend(currentFormData.dateOfBirth),
+          language: currentFormData.language || 'English',
+          address: currentFormData.address || ''
+        };
+
+        const profileResponse = await profileService.updateProfile(profileData);
+        
+        if (profileResponse) {
+          await refreshProfile();
+          toast.success('Profile updated successfully');
+        }
+      } catch (error) {
+        console.error('Auto-save error:', error);
+        toast.error(error.message || 'Failed to update profile');
+      }
     }, 1000);
   };
 

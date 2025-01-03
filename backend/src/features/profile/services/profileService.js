@@ -169,7 +169,6 @@ class ProfileService {
         .input('userId', sql.Int, userId);
 
       let updateFields = [];
-      let queryParams = [];
 
       if (profileData.firstName !== undefined) {
         request.input('firstName', sql.NVarChar(50), profileData.firstName);
@@ -183,8 +182,18 @@ class ProfileService {
         request.input('phoneNumber', sql.NVarChar(20), profileData.phoneNumber);
         updateFields.push('PhoneNumber = @phoneNumber');
       }
-      if (profileData.dateOfBirth !== undefined) {
-        request.input('dateOfBirth', sql.Date, new Date(profileData.dateOfBirth));
+      if (profileData.dateOfBirth !== undefined && profileData.dateOfBirth !== null) {
+        // Handle date format conversion
+        let dateOfBirth;
+        if (profileData.dateOfBirth.includes('/')) {
+          // Convert from DD/MM/YYYY to YYYY-MM-DD
+          const [day, month, year] = profileData.dateOfBirth.split('/');
+          dateOfBirth = `${year}-${month}-${day}`;
+        } else {
+          // Already in YYYY-MM-DD format
+          dateOfBirth = profileData.dateOfBirth;
+        }
+        request.input('dateOfBirth', sql.Date, dateOfBirth);
         updateFields.push('DateOfBirth = @dateOfBirth');
       }
       if (profileData.language !== undefined) {
@@ -216,6 +225,7 @@ class ProfileService {
       const result = await request.query(updateQuery);
       return result.recordset[0];
     } catch (error) {
+      console.error('Error in updateProfile:', error);
       throw error;
     }
   }
